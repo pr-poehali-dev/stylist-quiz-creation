@@ -17,7 +17,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     headers = {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, X-User-Id, X-Auth-Token'
     }
     
@@ -195,23 +195,58 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         elif method == 'GET' and '/admin/responses' in path:
             cur.execute('''
-                SELECT id, template_id, contact_name, contact_phone, contact_email, 
-                       answers, completed_at 
-                FROM t_p90617481_stylist_quiz_creatio.quiz_responses 
-                ORDER BY completed_at DESC
+                SELECT r.id, r.template_id, r.contact_name as name, r.contact_phone as phone, 
+                       r.contact_email as email, r.answers, r.completed_at,
+                       t.questions
+                FROM t_p90617481_stylist_quiz_creatio.quiz_responses r
+                LEFT JOIN t_p90617481_stylist_quiz_creatio.quiz_templates t ON r.template_id = t.id
+                ORDER BY r.completed_at DESC
             ''')
             results = cur.fetchall()
             
             responses = []
             for row in results:
-                resp = dict(row)
-                resp['completed_at'] = resp['completed_at'].isoformat() if resp['completed_at'] else None
-                responses.append(resp)
+                resp_data = {
+                    'id': row['id'],
+                    'name': row['name'] or '',
+                    'phone': row['phone'] or '',
+                    'email': row['email'] or '',
+                    'completed_at': row['completed_at'].isoformat() if row['completed_at'] else None
+                }
+                
+                if row['answers']:
+                    answers = row['answers'] if isinstance(row['answers'], dict) else json.loads(row['answers'])
+                    resp_data.update(answers)
+                
+                responses.append(resp_data)
             
             return {
                 'statusCode': 200,
                 'headers': headers,
                 'body': json.dumps(responses),
+                'isBase64Encoded': False
+            }
+        
+        elif method == 'DELETE' and '/template' in path:
+            cur.execute('''
+                DELETE FROM t_p90617481_stylist_quiz_creatio.quiz_templates
+                WHERE id IN (SELECT id FROM t_p90617481_stylist_quiz_creatio.quiz_templates ORDER BY id DESC LIMIT 1)
+                RETURNING id
+            ''')
+            result = cur.fetchone()
+            
+            if not result:
+                return {
+                    'statusCode': 404,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Template not found'}),
+                    'isBase64Encoded': False
+                }
+            
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({'success': True, 'deleted_id': result['id']}),
                 'isBase64Encoded': False
             }
         

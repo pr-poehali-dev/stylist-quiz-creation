@@ -192,4 +192,35 @@ export const quizApi = {
       return JSON.parse(localStorage.getItem("quizResponses") || "[]");
     }
   },
+
+  async deleteTemplate(quizId?: string) {
+    console.log('[API] Deleting template, id:', quizId);
+    
+    if (!USE_API) {
+      localStorage.removeItem("publicQuizTemplate");
+      return { success: true };
+    }
+
+    try {
+      const response = await fetch(getApiUrl("/template"), {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log('[API] Delete response status:', response.status);
+
+      if (!response.ok) {
+        throw new Error("Failed to delete template");
+      }
+
+      localStorage.removeItem("publicQuizTemplate");
+      return await response.json();
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      localStorage.removeItem("publicQuizTemplate");
+      return { success: true };
+    }
+  },
 };

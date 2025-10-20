@@ -115,16 +115,15 @@ export const QuizBuilder = () => {
     }
   };
 
-  const deleteQuiz = (quizId: string) => {
+  const deleteQuiz = async (quizId: string) => {
     const updatedQuizzes = quizzes.filter(q => q.id !== quizId);
     saveQuizzes(updatedQuizzes);
     
-    const publicQuiz = localStorage.getItem('publicQuizTemplate');
-    if (publicQuiz) {
-      const parsed = JSON.parse(publicQuiz);
-      if (parsed.id === quizId) {
-        localStorage.removeItem('publicQuizTemplate');
-      }
+    try {
+      const { quizApi } = await import('@/lib/api');
+      await quizApi.deleteTemplate(quizId);
+    } catch (error) {
+      console.error('Error deleting template from backend:', error);
     }
     
     if (currentQuiz?.id === quizId) {
@@ -133,7 +132,7 @@ export const QuizBuilder = () => {
     }
     toast({
       title: 'Удалено',
-      description: 'Тест удалён'
+      description: 'Тест удалён со всех страниц'
     });
   };
 
