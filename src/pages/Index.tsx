@@ -290,21 +290,53 @@ const Index = () => {
           </div>
         ) : (
           <div className="flex items-center justify-center p-4 pt-12">
-            <Card className="max-w-md shadow-xl border-0 text-center p-8">
-              <Icon name="ClipboardList" size={64} className="mx-auto text-gray-400 mb-4" />
-              <h1 className="text-2xl font-bold text-gray-800 mb-3">
-                Тест не создан
-              </h1>
-              <p className="text-gray-600 mb-6">
-                Администратор ещё не создал тест. Пожалуйста, зайдите позже.
-              </p>
-              <button
-                onClick={() => setShowAdmin(true)}
-                className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                Вход для администратора
-              </button>
-            </Card>
+            <div className="w-full max-w-4xl space-y-8">
+              <Card className="shadow-xl border-0">
+                <CardHeader className="text-center space-y-4 p-8">
+                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-pink-400 to-purple-400 rounded-full flex items-center justify-center">
+                    <Icon name="Sparkles" size={48} className="text-white" />
+                  </div>
+                  <CardTitle className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    Добро пожаловать!
+                  </CardTitle>
+                  <CardDescription className="text-lg text-gray-600" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                    Я помогу вам найти ваш идеальный стиль
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-8 space-y-6">
+                  <div className="prose max-w-none">
+                    <p className="text-gray-700 text-lg leading-relaxed text-center" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                      Привет! Я Юлия — персональный стилист. Помогаю найти свой уникальный стиль и создать гардероб, который подчеркивает вашу индивидуальность.
+                    </p>
+                  </div>
+                  
+                  <div className="text-center pt-4">
+                    <p className="text-gray-500 mb-6" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                      Сейчас тест находится в разработке. Свяжитесь со мной напрямую для консультации!
+                    </p>
+                    <a
+                      href="https://t.me/YuliyTa"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-3 bg-gradient-to-r from-pink-400 to-purple-400 hover:from-pink-500 hover:to-purple-500 text-white px-8 py-4 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                      style={{ fontFamily: "'Montserrat', sans-serif" }}
+                    >
+                      <Icon name="Send" size={24} />
+                      <span className="text-lg font-semibold">Написать в Telegram</span>
+                    </a>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <div className="text-center">
+                <button
+                  onClick={() => setShowAdmin(true)}
+                  className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  Вход для администратора
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
