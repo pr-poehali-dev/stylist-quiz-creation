@@ -1,9 +1,9 @@
-import { API_CONFIG } from '@/config/api';
+import { API_CONFIG } from "@/config/api";
 
-const USE_API = false; // Включить когда backend будет развернут
+const USE_API = true; // Включить когда backend будет развернут
 
 const getApiUrl = (path: string) => {
-  if (API_CONFIG.quiz.startsWith('http')) {
+  if (API_CONFIG.quiz.startsWith("http")) {
     return `${API_CONFIG.quiz}${path}`;
   }
   return `${API_CONFIG.quiz}${path}`;
@@ -12,149 +12,161 @@ const getApiUrl = (path: string) => {
 export const quizApi = {
   async getTemplate() {
     if (!USE_API) {
-      const stored = localStorage.getItem('publicQuizTemplate');
+      const stored = localStorage.getItem("publicQuizTemplate");
       return stored ? JSON.parse(stored) : null;
     }
-    
+
     try {
-      const response = await fetch(getApiUrl('/template'), {
-        method: 'GET',
+      const response = await fetch(getApiUrl("/template"), {
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
-      
+
       if (response.status === 404) {
         return null;
       }
-      
+
       if (!response.ok) {
-        throw new Error('Failed to fetch template');
+        throw new Error("Failed to fetch template");
       }
-      
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        console.warn('Backend not available, using localStorage');
-        const stored = localStorage.getItem('publicQuizTemplate');
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.warn("Backend not available, using localStorage");
+        const stored = localStorage.getItem("publicQuizTemplate");
         return stored ? JSON.parse(stored) : null;
       }
-      
+
       return await response.json();
     } catch (error) {
-      console.error('Error fetching template:', error);
-      const stored = localStorage.getItem('publicQuizTemplate');
+      console.error("Error fetching template:", error);
+      const stored = localStorage.getItem("publicQuizTemplate");
       return stored ? JSON.parse(stored) : null;
     }
   },
 
   async saveTemplate(template: any) {
     if (!USE_API) {
-      localStorage.setItem('publicQuizTemplate', JSON.stringify(template));
+      localStorage.setItem("publicQuizTemplate", JSON.stringify(template));
       return template;
     }
-    
+
     try {
-      const response = await fetch(getApiUrl('/template'), {
-        method: 'POST',
+      const response = await fetch(getApiUrl("/template"), {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(template),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to save template');
+        throw new Error("Failed to save template");
       }
-      
+
       return await response.json();
     } catch (error) {
-      console.error('Error saving template, using localStorage:', error);
-      localStorage.setItem('publicQuizTemplate', JSON.stringify(template));
+      console.error("Error saving template, using localStorage:", error);
+      localStorage.setItem("publicQuizTemplate", JSON.stringify(template));
       return template;
     }
   },
 
   async updateTemplate(template: any) {
     if (!USE_API) {
-      localStorage.setItem('publicQuizTemplate', JSON.stringify(template));
+      localStorage.setItem("publicQuizTemplate", JSON.stringify(template));
       return template;
     }
-    
+
     try {
-      const response = await fetch(getApiUrl('/template'), {
-        method: 'PUT',
+      const response = await fetch(getApiUrl("/template"), {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(template),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to update template');
+        throw new Error("Failed to update template");
       }
-      
+
       return await response.json();
     } catch (error) {
-      console.error('Error updating template, using localStorage:', error);
-      localStorage.setItem('publicQuizTemplate', JSON.stringify(template));
+      console.error("Error updating template, using localStorage:", error);
+      localStorage.setItem("publicQuizTemplate", JSON.stringify(template));
       return template;
     }
   },
 
   async submitResponse(data: any) {
     if (!USE_API) {
-      const responses = JSON.parse(localStorage.getItem('quizResponses') || '[]');
-      const newResponse = { ...data, id: Date.now(), completed_at: new Date().toISOString() };
+      const responses = JSON.parse(
+        localStorage.getItem("quizResponses") || "[]",
+      );
+      const newResponse = {
+        ...data,
+        id: Date.now(),
+        completed_at: new Date().toISOString(),
+      };
       responses.push(newResponse);
-      localStorage.setItem('quizResponses', JSON.stringify(responses));
+      localStorage.setItem("quizResponses", JSON.stringify(responses));
       return { success: true };
     }
-    
+
     try {
-      const response = await fetch(getApiUrl('/response'), {
-        method: 'POST',
+      const response = await fetch(getApiUrl("/response"), {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to submit response');
+        throw new Error("Failed to submit response");
       }
-      
+
       return await response.json();
     } catch (error) {
-      console.error('Error submitting response, using localStorage:', error);
-      const responses = JSON.parse(localStorage.getItem('quizResponses') || '[]');
-      const newResponse = { ...data, id: Date.now(), completed_at: new Date().toISOString() };
+      console.error("Error submitting response, using localStorage:", error);
+      const responses = JSON.parse(
+        localStorage.getItem("quizResponses") || "[]",
+      );
+      const newResponse = {
+        ...data,
+        id: Date.now(),
+        completed_at: new Date().toISOString(),
+      };
       responses.push(newResponse);
-      localStorage.setItem('quizResponses', JSON.stringify(responses));
+      localStorage.setItem("quizResponses", JSON.stringify(responses));
       return { success: true };
     }
   },
 
   async getResponses() {
     if (!USE_API) {
-      return JSON.parse(localStorage.getItem('quizResponses') || '[]');
+      return JSON.parse(localStorage.getItem("quizResponses") || "[]");
     }
-    
+
     try {
-      const response = await fetch(getApiUrl('/admin/responses'), {
-        method: 'GET',
+      const response = await fetch(getApiUrl("/admin/responses"), {
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to fetch responses');
+        throw new Error("Failed to fetch responses");
       }
-      
+
       return await response.json();
     } catch (error) {
-      console.error('Error fetching responses, using localStorage:', error);
-      return JSON.parse(localStorage.getItem('quizResponses') || '[]');
+      console.error("Error fetching responses, using localStorage:", error);
+      return JSON.parse(localStorage.getItem("quizResponses") || "[]");
     }
   },
 };
