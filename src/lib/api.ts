@@ -53,6 +53,9 @@ export const quizApi = {
       questions: template.questions || []
     };
 
+    console.log('[API] Saving template:', mapped);
+    console.log('[API] URL:', getApiUrl("/template"));
+
     if (!USE_API) {
       localStorage.setItem("publicQuizTemplate", JSON.stringify(mapped));
       return mapped;
@@ -67,11 +70,17 @@ export const quizApi = {
         body: JSON.stringify(mapped),
       });
 
+      console.log('[API] Response status:', response.status);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[API] Error response:', errorText);
         throw new Error("Failed to save template");
       }
 
-      return await response.json();
+      const result = await response.json();
+      console.log('[API] Success result:', result);
+      return result;
     } catch (error) {
       console.error("Error saving template, using localStorage:", error);
       localStorage.setItem("publicQuizTemplate", JSON.stringify(mapped));

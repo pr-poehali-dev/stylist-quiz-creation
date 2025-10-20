@@ -138,9 +138,11 @@ export const QuizBuilder = () => {
   };
 
   const publishQuiz = async (quiz: Quiz) => {
+    console.log('Publishing quiz:', quiz);
     try {
       const { quizApi } = await import('@/lib/api');
-      await quizApi.updateTemplate(quiz);
+      const result = await quizApi.saveTemplate(quiz);
+      console.log('Publish result:', result);
       toast({
         title: 'Опубликовано',
         description: 'Тест теперь виден всем пользователям'
