@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import Cookies from 'js-cookie';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -35,8 +34,8 @@ const Index = () => {
 
   useEffect(() => {
     const templates = JSON.parse(localStorage.getItem('quizTemplates') || '[]');
-    const savedStep = Cookies.get('quizStep');
-    const savedData = Cookies.get('quizData');
+    const savedStep = localStorage.getItem('quizStep');
+    const savedData = localStorage.getItem('quizData');
     
     if (templates.length > 0) {
       setActiveQuiz(templates[0]);
@@ -77,14 +76,14 @@ const Index = () => {
   const handleInputChange = (name: string, value: string) => {
     const updatedData = { ...quizData, [name]: value };
     setQuizData(updatedData);
-    Cookies.set('quizData', JSON.stringify(updatedData), { expires: 7 });
+    localStorage.setItem('quizData', JSON.stringify(updatedData));
   };
 
   const handleNext = () => {
     if (step < questions.length - 1) {
       const newStep = step + 1;
       setStep(newStep);
-      Cookies.set('quizStep', newStep.toString(), { expires: 7 });
+      localStorage.setItem('quizStep', newStep.toString());
     }
   };
 
@@ -92,7 +91,7 @@ const Index = () => {
     if (step > 0) {
       const newStep = step - 1;
       setStep(newStep);
-      Cookies.set('quizStep', newStep.toString(), { expires: 7 });
+      localStorage.setItem('quizStep', newStep.toString());
     }
   };
 
@@ -126,8 +125,8 @@ const Index = () => {
     
     setQuizData(emptyData);
     setStep(0);
-    Cookies.remove('quizData');
-    Cookies.remove('quizStep');
+    localStorage.removeItem('quizData');
+    localStorage.removeItem('quizStep');
   };
 
   const canProceed = () => {
