@@ -26,11 +26,17 @@ interface QuizData {
 
 const Index = () => {
   const [step, setStep] = useState(0);
-  const [showAdmin, setShowAdmin] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(() => {
+    return localStorage.getItem('showAdmin') === 'true';
+  });
   const { toast } = useToast();
   const [activeQuiz, setActiveQuiz] = useState<any>(null);
   
   const [quizData, setQuizData] = useState<any>({});
+  
+  useEffect(() => {
+    localStorage.setItem('showAdmin', showAdmin.toString());
+  }, [showAdmin]);
 
   useEffect(() => {
     const templates = JSON.parse(localStorage.getItem('quizTemplates') || '[]');
@@ -303,13 +309,22 @@ const Index = () => {
 const AdminPanel = ({ onBack }: { onBack: () => void }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('adminAuth') === 'true';
+  });
   const [responses, setResponses] = useState<any[]>([]);
   const { toast } = useToast();
+  
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadResponses();
+    }
+  }, []);
 
   const handleLogin = async () => {
     if (email === 'pells1ze@gmail.com' && password === '123789456h') {
       setIsAuthenticated(true);
+      localStorage.setItem('adminAuth', 'true');
       loadResponses();
     } else {
       toast({
@@ -374,7 +389,10 @@ const AdminPanel = ({ onBack }: { onBack: () => void }) => {
               />
             </div>
             <div className="flex gap-3">
-              <Button onClick={onBack} variant="outline" className="flex-1">
+              <Button onClick={() => {
+                localStorage.removeItem('showAdmin');
+                onBack();
+              }} variant="outline" className="flex-1">
                 Назад
               </Button>
               <Button onClick={handleLogin} className="flex-1 bg-gradient-to-r from-pink-400 to-purple-400">
@@ -392,7 +410,11 @@ const AdminPanel = ({ onBack }: { onBack: () => void }) => {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Админ-панель</h1>
-          <Button onClick={onBack} variant="outline" size="sm">
+          <Button onClick={() => {
+            localStorage.removeItem('adminAuth');
+            localStorage.removeItem('showAdmin');
+            onBack();
+          }} variant="outline" size="sm">
             <Icon name="LogOut" size={18} className="mr-2" />
             Выйти
           </Button>
