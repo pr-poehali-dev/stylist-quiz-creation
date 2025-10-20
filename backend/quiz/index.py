@@ -260,6 +260,41 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'isBase64Encoded': False
             }
         
+        elif method == 'DELETE' and '/admin/response/' in path:
+            response_id = path.split('/')[-1]
+            
+            cur.execute('''
+                DELETE FROM t_p90617481_stylist_quiz_creatio.quiz_responses
+                WHERE id = %s
+                RETURNING id
+            ''', (response_id,))
+            result = cur.fetchone()
+            
+            if not result:
+                return {
+                    'statusCode': 404,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Response not found'}),
+                    'isBase64Encoded': False
+                }
+            
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({'success': True}),
+                'isBase64Encoded': False
+            }
+        
+        elif method == 'DELETE' and '/admin/responses/clear' in path:
+            cur.execute('DELETE FROM t_p90617481_stylist_quiz_creatio.quiz_responses')
+            
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({'success': True}),
+                'isBase64Encoded': False
+            }
+        
         return {
             'statusCode': 404,
             'headers': headers,

@@ -622,23 +622,47 @@ const AdminPanel = ({ onBack }: { onBack: () => void }) => {
     }
   };
 
-  const deleteResponse = (responseId: number) => {
-    const updatedResponses = responses.filter(r => r.id !== responseId);
-    setResponses(updatedResponses);
-    localStorage.setItem('quizResponses', JSON.stringify(updatedResponses));
-    toast({
-      title: 'Удалено',
-      description: 'Ответ пользователя удалён'
-    });
+  const deleteResponse = async (responseId: number) => {
+    try {
+      const { quizApi } = await import('@/lib/api');
+      await quizApi.deleteResponse(responseId);
+      
+      const updatedResponses = responses.filter(r => r.id !== responseId);
+      setResponses(updatedResponses);
+      
+      toast({
+        title: 'Удалено',
+        description: 'Ответ пользователя удалён'
+      });
+    } catch (error) {
+      console.error('Error deleting response:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось удалить ответ',
+        variant: 'destructive'
+      });
+    }
   };
 
-  const clearAllResponses = () => {
-    setResponses([]);
-    localStorage.setItem('quizResponses', '[]');
-    toast({
-      title: 'Очищено',
-      description: 'Все ответы удалены'
-    });
+  const clearAllResponses = async () => {
+    try {
+      const { quizApi } = await import('@/lib/api');
+      await quizApi.clearAllResponses();
+      
+      setResponses([]);
+      
+      toast({
+        title: 'Очищено',
+        description: 'Все ответы удалены'
+      });
+    } catch (error) {
+      console.error('Error clearing responses:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось очистить ответы',
+        variant: 'destructive'
+      });
+    }
   };
 
   if (!isAuthenticated) {
@@ -792,30 +816,41 @@ const AdminPanel = ({ onBack }: { onBack: () => void }) => {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4 p-4 sm:p-6">
-                  {Object.entries(response).map(([key, value]) => {
-                    if (key === 'id' || key === 'completed_at' || key === 'contact' || key === 'answers') return null;
-                    
-                    let displayValue = '';
-                    if (Array.isArray(value)) {
-                      displayValue = value.join(', ');
-                    } else if (typeof value === 'object' && value !== null) {
-                      return null;
-                    } else {
-                      displayValue = String(value);
-                    }
-                    
-                    if (!displayValue || displayValue === '') return null;
-                    
-                    return (
-                      <div key={key} className="border-b pb-3 last:border-0">
-                        <p className="text-xs sm:text-sm font-medium text-gray-500 mb-1 capitalize">
-                          {key.replace(/([A-Z_])/g, ' $1').trim()}
-                        </p>
-                        <p className="text-sm sm:text-base">{displayValue}</p>
-                      </div>
-                    );
-                  })}
+                <CardContent className="space-y-3 p-4 sm:p-6">
+                  {Object.entries(response)
+                    .filter(([key]) => key !== 'id' && key !== 'completed_at' && key !== 'contact' && key !== 'answers' && key !== 'name' && key !== 'email' && key !== 'phone' && key !== 'template_id')
+                    .map(([key, value]) => {
+                      let displayValue = '';
+                      if (Array.isArray(value)) {
+                        displayValue = value.join(', ');
+                      } else if (typeof value === 'object' && value !== null) {
+                        return null;
+                      } else {
+                        displayValue = String(value);
+                      }
+                      
+                      if (!displayValue || displayValue === '') return null;
+                      
+                      const formattedKey = key
+                        .replace(/_/g, ' ')
+                        .replace(/([A-Z])/g, ' $1')
+                        .trim()
+                        .split(' ')
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(' ');
+                      
+                      return (
+                        <div key={key} className="bg-gray-50 rounded-lg p-3">
+                          <p className="text-xs font-semibold text-gray-600 mb-1">
+                            {formattedKey}
+                          </p>
+                          <p className="text-sm text-gray-900 whitespace-pre-wrap break-words">{displayValue}</p>
+                        </div>
+                      );
+                    })}
+                  {Object.entries(response).filter(([key]) => key !== 'id' && key !== 'completed_at' && key !== 'contact' && key !== 'answers' && key !== 'name' && key !== 'email' && key !== 'phone' && key !== 'template_id').length === 0 && (
+                    <p className="text-sm text-gray-500 italic">Пользователь не ответил на вопросы</p>
+                  )}
                 </CardContent>
               </Card>
             ))

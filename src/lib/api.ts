@@ -232,4 +232,56 @@ export const quizApi = {
       return { success: true };
     }
   },
+
+  async deleteResponse(responseId: number) {
+    if (!USE_API) {
+      const responses = JSON.parse(localStorage.getItem("quizResponses") || "[]");
+      const updated = responses.filter((r: any) => r.id !== responseId);
+      localStorage.setItem("quizResponses", JSON.stringify(updated));
+      return { success: true };
+    }
+
+    try {
+      const response = await fetch(getApiUrl(`/admin/response/${responseId}`), {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete response");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error deleting response:", error);
+      throw error;
+    }
+  },
+
+  async clearAllResponses() {
+    if (!USE_API) {
+      localStorage.setItem("quizResponses", "[]");
+      return { success: true };
+    }
+
+    try {
+      const response = await fetch(getApiUrl("/admin/responses/clear"), {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to clear responses");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error clearing responses:", error);
+      throw error;
+    }
+  },
 };
