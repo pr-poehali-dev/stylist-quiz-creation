@@ -125,6 +125,9 @@ export const quizApi = {
   },
 
   async submitResponse(data: any) {
+    console.log('[API] Submitting response:', data);
+    console.log('[API] URL:', getApiUrl("/response"));
+    
     if (!USE_API) {
       const responses = JSON.parse(
         localStorage.getItem("quizResponses") || "[]",
@@ -148,11 +151,17 @@ export const quizApi = {
         body: JSON.stringify(data),
       });
 
+      console.log('[API] Submit response status:', response.status);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[API] Submit error:', errorText);
         throw new Error("Failed to submit response");
       }
 
-      return await response.json();
+      const result = await response.json();
+      console.log('[API] Submit success:', result);
+      return result;
     } catch (error) {
       console.error("Error submitting response, using localStorage:", error);
       const responses = JSON.parse(

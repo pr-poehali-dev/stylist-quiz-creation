@@ -168,6 +168,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             template_result = cur.fetchone()
             template_id = template_result['id'] if template_result else None
             
+            name = body_data.get('name', '') or body_data.get('contact', {}).get('name', '')
+            phone = body_data.get('phone', '') or body_data.get('contact', {}).get('phone', '')
+            email = body_data.get('email', '') or body_data.get('contact', {}).get('email', '')
+            
             cur.execute('''
                 INSERT INTO t_p90617481_stylist_quiz_creatio.quiz_responses 
                 (template_id, contact_name, contact_phone, contact_email, answers, name, phone, email)
@@ -175,13 +179,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 RETURNING id
             ''', (
                 template_id,
-                body_data.get('contact', {}).get('name', ''),
-                body_data.get('contact', {}).get('phone', ''),
-                body_data.get('contact', {}).get('email', ''),
-                json.dumps(body_data.get('answers', [])),
-                body_data.get('contact', {}).get('name', ''),
-                body_data.get('contact', {}).get('phone', ''),
-                body_data.get('contact', {}).get('email', '')
+                name,
+                phone,
+                email,
+                json.dumps(body_data),
+                name,
+                phone,
+                email
             ))
             
             result = cur.fetchone()
