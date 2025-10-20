@@ -62,31 +62,9 @@ const Index = () => {
     }
   }, []);
 
-  if (!activeQuiz) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-white flex items-center justify-center p-4">
-        <Card className="max-w-md shadow-xl border-0 text-center p-8">
-          <Icon name="ClipboardList" size={64} className="mx-auto text-gray-400 mb-4" />
-          <h1 className="text-2xl font-bold text-gray-800 mb-3">
-            Тест не создан
-          </h1>
-          <p className="text-gray-600 mb-6">
-            Администратор ещё не создал тест. Пожалуйста, зайдите позже.
-          </p>
-          <button
-            onClick={() => setShowAdmin(true)}
-            className="text-sm text-gray-400 hover:text-gray-600"
-          >
-            Вход для администратора
-          </button>
-        </Card>
-      </div>
-    );
-  }
-
-  const questions = activeQuiz.questions;
+  const questions = activeQuiz?.questions || [];
   const currentQuestion = questions[step];
-  const progress = ((step + 1) / questions.length) * 100;
+  const progress = questions.length > 0 ? ((step + 1) / questions.length) * 100 : 0;
 
   const handleInputChange = (name: string, value: string) => {
     const updatedData = { ...quizData, [name]: value };
@@ -162,6 +140,28 @@ const Index = () => {
 
   if (showAdmin) {
     return <AdminPanel onBack={() => setShowAdmin(false)} />;
+  }
+
+  if (!activeQuiz) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-white flex items-center justify-center p-4">
+        <Card className="max-w-md shadow-xl border-0 text-center p-8">
+          <Icon name="ClipboardList" size={64} className="mx-auto text-gray-400 mb-4" />
+          <h1 className="text-2xl font-bold text-gray-800 mb-3">
+            Тест не создан
+          </h1>
+          <p className="text-gray-600 mb-6">
+            Администратор ещё не создал тест. Пожалуйста, зайдите позже.
+          </p>
+          <button
+            onClick={() => setShowAdmin(true)}
+            className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            Вход для администратора
+          </button>
+        </Card>
+      </div>
+    );
   }
 
   return (
