@@ -58,113 +58,33 @@ const Index = () => {
         setQuizData(initialData);
       }
     } else {
-      setActiveQuiz({ questions: defaultQuestions, name: 'Стилист-тест' });
-      if (!savedData) {
-        setQuizData({
-          name: '',
-          email: '',
-          phone: '',
-          ageRange: '',
-          bodyType: '',
-          stylePreferences: '',
-          colorPreferences: '',
-          wardrobeGoals: '',
-          budgetRange: '',
-          lifestyle: ''
-        });
-      }
+      setActiveQuiz(null);
     }
   }, []);
 
-  const defaultQuestions = [
-    {
-      id: 'personal',
-      title: 'Контактная информация',
-      description: 'Расскажите немного о себе',
-      fields: [
-        { name: 'name', label: 'Ваше имя', type: 'text', required: true },
-        { name: 'email', label: 'Email', type: 'email', required: false },
-        { name: 'phone', label: 'Телефон', type: 'tel', required: false }
-      ]
-    },
-    {
-      id: 'age',
-      title: 'Возрастная категория',
-      description: 'Выберите свою возрастную группу',
-      type: 'radio',
-      field: 'ageRange',
-      options: [
-        '18-25',
-        '26-35',
-        '36-45',
-        '46-55',
-        '56+'
-      ]
-    },
-    {
-      id: 'body',
-      title: 'Тип фигуры',
-      description: 'Какой у вас тип фигуры?',
-      type: 'radio',
-      field: 'bodyType',
-      options: [
-        'Песочные часы',
-        'Треугольник',
-        'Перевернутый треугольник',
-        'Прямоугольник',
-        'Яблоко',
-        'Груша'
-      ]
-    },
-    {
-      id: 'style',
-      title: 'Стилевые предпочтения',
-      description: 'Какой стиль одежды вам нравится?',
-      type: 'textarea',
-      field: 'stylePreferences',
-      placeholder: 'Например: классический, casual, спортивный...'
-    },
-    {
-      id: 'colors',
-      title: 'Цветовая палитра',
-      description: 'Какие цвета вы предпочитаете в одежде?',
-      type: 'textarea',
-      field: 'colorPreferences',
-      placeholder: 'Например: пастельные тона, яркие цвета, черно-белая гамма...'
-    },
-    {
-      id: 'goals',
-      title: 'Цели по гардеробу',
-      description: 'Что вы хотите улучшить в своем гардеробе?',
-      type: 'textarea',
-      field: 'wardrobeGoals',
-      placeholder: 'Например: обновить базовый гардероб, подобрать образы для работы...'
-    },
-    {
-      id: 'budget',
-      title: 'Бюджет',
-      description: 'Ваш планируемый бюджет на покупки',
-      type: 'radio',
-      field: 'budgetRange',
-      options: [
-        'До 10 000 ₽',
-        '10 000 - 30 000 ₽',
-        '30 000 - 50 000 ₽',
-        '50 000 - 100 000 ₽',
-        'Более 100 000 ₽'
-      ]
-    },
-    {
-      id: 'lifestyle',
-      title: 'Образ жизни',
-      description: 'Опишите свой образ жизни',
-      type: 'textarea',
-      field: 'lifestyle',
-      placeholder: 'Например: работа в офисе, активный отдых, светские мероприятия...'
-    }
-  ];
+  if (!activeQuiz) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-white flex items-center justify-center p-4">
+        <Card className="max-w-md shadow-xl border-0 text-center p-8">
+          <Icon name="ClipboardList" size={64} className="mx-auto text-gray-400 mb-4" />
+          <h1 className="text-2xl font-bold text-gray-800 mb-3">
+            Тест не создан
+          </h1>
+          <p className="text-gray-600 mb-6">
+            Администратор ещё не создал тест. Пожалуйста, зайдите позже.
+          </p>
+          <button
+            onClick={() => setShowAdmin(true)}
+            className="text-sm text-gray-400 hover:text-gray-600"
+          >
+            Вход для администратора
+          </button>
+        </Card>
+      </div>
+    );
+  }
 
-  const questions = activeQuiz?.questions || defaultQuestions;
+  const questions = activeQuiz.questions;
   const currentQuestion = questions[step];
   const progress = ((step + 1) / questions.length) * 100;
 
@@ -204,18 +124,20 @@ const Index = () => {
     });
     localStorage.setItem('quizResponses', JSON.stringify(savedResponses));
     
-    const emptyData = {
-      name: '',
-      email: '',
-      phone: '',
-      ageRange: '',
-      bodyType: '',
-      stylePreferences: '',
-      colorPreferences: '',
-      wardrobeGoals: '',
-      budgetRange: '',
-      lifestyle: ''
-    };
+    const emptyData: any = {};
+    if (activeQuiz?.questions) {
+      activeQuiz.questions.forEach((q: any) => {
+        if (q.field) {
+          emptyData[q.field] = '';
+        }
+        if (q.fields) {
+          q.fields.forEach((f: any) => {
+            emptyData[f.name] = '';
+          });
+        }
+      });
+    }
+    
     setQuizData(emptyData);
     setStep(0);
     Cookies.remove('quizData');
