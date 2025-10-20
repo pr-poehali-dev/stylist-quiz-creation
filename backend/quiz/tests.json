@@ -1,0 +1,32 @@
+{
+  "tests": [
+    {
+      "name": "Submit quiz response",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "name": "Анна Иванова",
+        "email": "anna@example.com",
+        "phone": "+7 999 123-45-67",
+        "age_range": "26-35",
+        "body_type": "Песочные часы",
+        "style_preferences": "Классический, деловой",
+        "color_preferences": "Пастельные тона",
+        "wardrobe_goals": "Обновить деловой гардероб",
+        "budget_range": "30 000 - 50 000 ₽",
+        "lifestyle": "Работа в офисе"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      }
+    },
+    {
+      "name": "Get admin responses",
+      "method": "GET",
+      "path": "/admin/responses",
+      "expectedStatus": 200,
+      "bodyMatcher": "partial"
+    }
+  ]
+}
