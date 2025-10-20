@@ -34,6 +34,13 @@ const Index = () => {
   const [quizData, setQuizData] = useState<any>({});
 
   useEffect(() => {
+    const templates = JSON.parse(localStorage.getItem('quizTemplates') || '[]');
+    if (templates.length > 0) {
+      setActiveQuiz(templates[0]);
+    } else {
+      setActiveQuiz(null);
+    }
+    
     const savedStep = Cookies.get('quizStep');
     const savedData = Cookies.get('quizData');
     
@@ -42,23 +49,24 @@ const Index = () => {
     }
     
     if (savedData) {
-      setQuizData(JSON.parse(savedData));
-    }
-    
-    const templates = JSON.parse(localStorage.getItem('quizTemplates') || '[]');
-    if (templates.length > 0) {
-      setActiveQuiz(templates[0]);
-      if (!savedData) {
-        const initialData: any = {};
-        templates[0].questions.forEach((q: any) => {
-          if (q.field) {
-            initialData[q.field] = '';
-          }
-        });
-        setQuizData(initialData);
+      try {
+        setQuizData(JSON.parse(savedData));
+      } catch (e) {
+        console.error('Error parsing saved quiz data:', e);
       }
-    } else {
-      setActiveQuiz(null);
+    } else if (templates.length > 0) {
+      const initialData: any = {};
+      templates[0].questions.forEach((q: any) => {
+        if (q.field) {
+          initialData[q.field] = '';
+        }
+        if (q.fields) {
+          q.fields.forEach((f: any) => {
+            initialData[f.name] = '';
+          });
+        }
+      });
+      setQuizData(initialData);
     }
   }, []);
 
