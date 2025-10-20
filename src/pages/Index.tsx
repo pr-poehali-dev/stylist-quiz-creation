@@ -119,6 +119,7 @@ const Index = () => {
 
   const handleSubmit = async () => {
     try {
+      console.log('[Quiz] Submitting quiz data:', quizData);
       const { quizApi } = await import('@/lib/api');
       await quizApi.submitResponse(quizData);
       

@@ -163,6 +163,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         elif method == 'POST' and '/response' in path:
             body_data = json.loads(event.get('body', '{}'))
+            print(f"[DEBUG] Received quiz response: {body_data}")
+            print(f"[DEBUG] Keys in body_data: {list(body_data.keys())}")
             
             cur.execute('SELECT id FROM t_p90617481_stylist_quiz_creatio.quiz_templates ORDER BY id DESC LIMIT 1')
             template_result = cur.fetchone()
