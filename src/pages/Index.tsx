@@ -192,7 +192,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="text-xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent" style={{ fontFamily: "'Playfair Display', serif" }}>
-              {activeQuiz?.name || 'Стилист-тест'}
+              Julia Style
             </div>
             <div className="flex gap-6">
               <a href="#blog" className="text-gray-700 hover:text-purple-400 transition-colors font-medium" style={{ fontFamily: "'Montserrat', sans-serif" }}>
