@@ -26,6 +26,7 @@ interface QuizData {
 
 const Index = () => {
   const [step, setStep] = useState(0);
+  const [currentPage, setCurrentPage] = useState<'quiz' | 'contacts'>('quiz');
   const [showAdmin, setShowAdmin] = useState(() => {
     return localStorage.getItem('showAdmin') === 'true';
   });
@@ -195,17 +196,94 @@ const Index = () => {
               Julia Style
             </div>
             <div className="flex gap-6">
-              <a href="#blog" className="text-gray-700 hover:text-purple-400 transition-colors font-medium" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                Блог
-              </a>
-              <a href="#contacts" className="text-gray-700 hover:text-purple-400 transition-colors font-medium" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              <button
+                onClick={() => setCurrentPage('quiz')}
+                className={`${currentPage === 'quiz' ? 'text-purple-400' : 'text-gray-700'} hover:text-purple-400 transition-colors font-medium`}
+                style={{ fontFamily: "'Montserrat', sans-serif" }}
+              >
+                Главная
+              </button>
+              <button
+                onClick={() => setCurrentPage('contacts')}
+                className={`${currentPage === 'contacts' ? 'text-purple-400' : 'text-gray-700'} hover:text-purple-400 transition-colors font-medium`}
+                style={{ fontFamily: "'Montserrat', sans-serif" }}
+              >
                 Контакты
-              </a>
+              </button>
             </div>
           </div>
         </div>
       </nav>
       
+      {currentPage === 'contacts' ? (
+        <div className="flex items-center justify-center p-4 pt-12">
+          <div className="w-full max-w-4xl">
+            <Card className="shadow-xl border-0">
+              <CardHeader className="text-center space-y-4 p-8">
+                <CardTitle className="text-4xl font-bold" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  Юлия
+                </CardTitle>
+                <CardDescription className="text-lg" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  Персональный стилист
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-8 space-y-6">
+                <div className="prose max-w-none">
+                  <p className="text-gray-700 text-lg leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                    Привет! Я Юлия — персональный стилист с многолетним опытом работы. 
+                    Помогаю женщинам найти свой уникальный стиль и чувствовать себя уверенно в любой ситуации.
+                  </p>
+                  <p className="text-gray-700 text-lg leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                    Моя специализация — создание индивидуального гардероба, который подчеркивает вашу красоту 
+                    и соответствует вашему образу жизни. Работаю с разными стилями: от элегантной классики 
+                    до современного casual.
+                  </p>
+                </div>
+
+                <div className="border-t border-gray-200 pt-6 mt-6">
+                  <h3 className="text-2xl font-bold mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    Мои услуги:
+                  </h3>
+                  <ul className="space-y-3" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                    <li className="flex items-start gap-3">
+                      <Icon name="CheckCircle" className="text-purple-400 mt-1 flex-shrink-0" size={20} />
+                      <span className="text-gray-700">Разбор гардероба и шоппинг-сопровождение</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <Icon name="CheckCircle" className="text-purple-400 mt-1 flex-shrink-0" size={20} />
+                      <span className="text-gray-700">Подбор капсульного гардероба</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <Icon name="CheckCircle" className="text-purple-400 mt-1 flex-shrink-0" size={20} />
+                      <span className="text-gray-700">Консультации по стилю и имиджу</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <Icon name="CheckCircle" className="text-purple-400 mt-1 flex-shrink-0" size={20} />
+                      <span className="text-gray-700">Подготовка образов для особых мероприятий</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="border-t border-gray-200 pt-6 mt-6">
+                  <h3 className="text-2xl font-bold mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    Свяжитесь со мной:
+                  </h3>
+                  <a
+                    href="https://t.me/YuliyTa"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-3 bg-gradient-to-r from-pink-400 to-purple-400 hover:from-pink-500 hover:to-purple-500 text-white px-8 py-4 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                    style={{ fontFamily: "'Montserrat', sans-serif" }}
+                  >
+                    <Icon name="Send" size={24} />
+                    <span className="text-lg font-semibold">Написать в Telegram</span>
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      ) : (
       <div className="flex items-center justify-center p-4 pt-12">
         <div className="w-full max-w-2xl">
           <div className="text-center mb-6 md:mb-8 animate-fade-in px-2">
@@ -356,6 +434,7 @@ const Index = () => {
         </button>
         </div>
       </div>
+      )}
     </div>
   );
 };
