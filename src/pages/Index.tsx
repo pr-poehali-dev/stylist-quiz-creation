@@ -62,7 +62,7 @@ const Index = () => {
         const initialData: any = {};
         templates[0].questions.forEach((q: any) => {
           if (q.field) {
-            initialData[q.field] = '';
+            initialData[q.field] = q.type === 'checkbox' ? [] : '';
           }
           if (q.fields) {
             q.fields.forEach((f: any) => {
@@ -81,7 +81,7 @@ const Index = () => {
   const currentQuestion = questions[step];
   const progress = questions.length > 0 ? ((step + 1) / questions.length) * 100 : 0;
 
-  const handleInputChange = (name: string, value: string) => {
+  const handleInputChange = (name: string, value: string | string[]) => {
     const updatedData = { ...quizData, [name]: value };
     setQuizData(updatedData);
     localStorage.setItem('quizData', JSON.stringify(updatedData));
@@ -121,7 +121,7 @@ const Index = () => {
     if (activeQuiz?.questions) {
       activeQuiz.questions.forEach((q: any) => {
         if (q.field) {
-          emptyData[q.field] = '';
+          emptyData[q.field] = q.type === 'checkbox' ? [] : '';
         }
         if (q.fields) {
           q.fields.forEach((f: any) => {
@@ -148,6 +148,10 @@ const Index = () => {
     
     if (currentQuestion.type === 'radio' && currentQuestion.field) {
       return quizData[currentQuestion.field] !== '';
+    }
+    
+    if (currentQuestion.type === 'checkbox' && currentQuestion.field) {
+      return Array.isArray(quizData[currentQuestion.field]) && quizData[currentQuestion.field].length > 0;
     }
     
     return true;
@@ -249,6 +253,31 @@ const Index = () => {
                   </div>
                 ))}
               </RadioGroup>
+            )}
+
+            {currentQuestion.type === 'checkbox' && currentQuestion.field && (
+              <div className="space-y-3">
+                {currentQuestion.options?.map((option) => (
+                  <div key={option} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-accent/50 transition-colors">
+                    <input
+                      type="checkbox"
+                      id={option}
+                      checked={(quizData[currentQuestion.field!] || []).includes(option)}
+                      onChange={(e) => {
+                        const currentValues = quizData[currentQuestion.field!] || [];
+                        const newValues = e.target.checked
+                          ? [...currentValues, option]
+                          : currentValues.filter((v: string) => v !== option);
+                        handleInputChange(currentQuestion.field!, newValues);
+                      }}
+                      className="w-5 h-5 rounded border-gray-300 text-pink-400 focus:ring-pink-400 cursor-pointer"
+                    />
+                    <Label htmlFor={option} className="flex-1 cursor-pointer text-base">
+                      {option}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             )}
 
             {currentQuestion.type === 'textarea' && currentQuestion.field && (
@@ -510,34 +539,22 @@ const AdminPanel = ({ onBack }: { onBack: () => void }) => {
                   </div>
                 </CardHeader>
                 <CardContent className="grid sm:grid-cols-2 gap-3 sm:gap-4 p-4 sm:p-6">
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">Возраст</p>
-                    <p className="text-sm sm:text-base">{response.ageRange}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">Тип фигуры</p>
-                    <p className="text-sm sm:text-base">{response.bodyType}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">Бюджет</p>
-                    <p className="text-sm sm:text-base">{response.budgetRange}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">Стиль</p>
-                    <p className="text-sm sm:text-base">{response.stylePreferences}</p>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">Цветовые предпочтения</p>
-                    <p className="text-sm sm:text-base">{response.colorPreferences}</p>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">Цели по гардеробу</p>
-                    <p className="text-sm sm:text-base">{response.wardrobeGoals}</p>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">Образ жизни</p>
-                    <p className="text-sm sm:text-base">{response.lifestyle}</p>
-                  </div>
+                  {Object.entries(response).map(([key, value]) => {
+                    if (key === 'id' || key === 'completed_at' || key === 'name' || key === 'email' || key === 'phone') return null;
+                    
+                    const displayValue = Array.isArray(value) 
+                      ? value.join(', ') 
+                      : value;
+                    
+                    return (
+                      <div key={key} className={typeof value === 'string' && value.length > 50 ? "sm:col-span-2" : ""}>
+                        <p className="text-xs sm:text-sm font-medium text-gray-500 capitalize">
+                          {key.replace(/([A-Z])/g, ' $1').trim()}
+                        </p>
+                        <p className="text-sm sm:text-base">{displayValue}</p>
+                      </div>
+                    );
+                  })}
                 </CardContent>
               </Card>
             ))

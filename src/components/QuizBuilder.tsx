@@ -14,7 +14,7 @@ interface Question {
   id: string;
   title: string;
   description: string;
-  type: 'text' | 'textarea' | 'radio' | 'fields';
+  type: 'text' | 'textarea' | 'radio' | 'checkbox' | 'fields';
   field?: string;
   options?: string[];
   fields?: Array<{ name: string; label: string; type: string; required: boolean }>;
@@ -149,7 +149,7 @@ export const QuizBuilder = () => {
       ...(questionForm.type === 'fields' ? {} : {
         field: questionForm.field || questionForm.title.toLowerCase().replace(/\s+/g, '_')
       }),
-      ...(questionForm.type === 'radio' && {
+      ...((questionForm.type === 'radio' || questionForm.type === 'checkbox') && {
         options: questionForm.options.split('\n').filter(o => o.trim())
       }),
       ...(questionForm.type === 'textarea' && {
@@ -273,7 +273,8 @@ export const QuizBuilder = () => {
                     <SelectContent>
                       <SelectItem value="text">Короткий текст</SelectItem>
                       <SelectItem value="textarea">Длинный текст</SelectItem>
-                      <SelectItem value="radio">Выбор варианта</SelectItem>
+                      <SelectItem value="radio">Выбор варианта (один)</SelectItem>
+                      <SelectItem value="checkbox">Выбор вариантов (несколько)</SelectItem>
                       <SelectItem value="fields">Несколько полей</SelectItem>
                     </SelectContent>
                   </Select>
@@ -290,7 +291,7 @@ export const QuizBuilder = () => {
                   </div>
                 )}
                 
-                {questionForm.type === 'radio' && (
+                {(questionForm.type === 'radio' || questionForm.type === 'checkbox') && (
                   <div>
                     <Label>Варианты ответов (каждый с новой строки)</Label>
                     <Textarea
