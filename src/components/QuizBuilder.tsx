@@ -186,13 +186,20 @@ export const QuizBuilder = () => {
   const saveQuestion = () => {
     if (!currentQuiz) return;
 
+    const baseFieldName = questionForm.title.toLowerCase().replace(/[^а-яa-z0-9]/g, '_').replace(/_+/g, '_').slice(0, 50);
+    
+    const processedFields = customFields.map((field, index) => ({
+      ...field,
+      name: field.name || `${baseFieldName}_${index + 1}`
+    }));
+
     const newQuestion: Question = {
       id: editingQuestion?.id || Date.now().toString(),
       title: questionForm.title,
       description: questionForm.description,
       type: questionForm.type,
       ...(questionForm.type === 'fields' ? {} : {
-        field: questionForm.field || questionForm.title.toLowerCase().replace(/\s+/g, '_')
+        field: questionForm.field || baseFieldName
       }),
       ...((questionForm.type === 'radio' || questionForm.type === 'checkbox') && {
         options: questionForm.options.split('\n').filter(o => o.trim())
@@ -200,8 +207,8 @@ export const QuizBuilder = () => {
       ...(questionForm.type === 'textarea' && {
         placeholder: questionForm.placeholder
       }),
-      ...(questionForm.type === 'fields' && customFields.length > 0 && {
-        fields: customFields
+      ...(questionForm.type === 'fields' && processedFields.length > 0 && {
+        fields: processedFields
       })
     };
 
