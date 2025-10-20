@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
+import QuizBuilder from '@/components/QuizBuilder';
 
 interface QuizData {
   name: string;
@@ -25,21 +27,39 @@ const Index = () => {
   const [step, setStep] = useState(0);
   const [showAdmin, setShowAdmin] = useState(false);
   const { toast } = useToast();
+  const [activeQuiz, setActiveQuiz] = useState<any>(null);
   
-  const [quizData, setQuizData] = useState<QuizData>({
-    name: '',
-    email: '',
-    phone: '',
-    ageRange: '',
-    bodyType: '',
-    stylePreferences: '',
-    colorPreferences: '',
-    wardrobeGoals: '',
-    budgetRange: '',
-    lifestyle: ''
-  });
+  const [quizData, setQuizData] = useState<any>({});
 
-  const questions = [
+  useEffect(() => {
+    const templates = JSON.parse(localStorage.getItem('quizTemplates') || '[]');
+    if (templates.length > 0) {
+      setActiveQuiz(templates[0]);
+      const initialData: any = {};
+      templates[0].questions.forEach((q: any) => {
+        if (q.field) {
+          initialData[q.field] = '';
+        }
+      });
+      setQuizData(initialData);
+    } else {
+      setActiveQuiz({ questions: defaultQuestions, name: 'Стилист-тест' });
+      setQuizData({
+        name: '',
+        email: '',
+        phone: '',
+        ageRange: '',
+        bodyType: '',
+        stylePreferences: '',
+        colorPreferences: '',
+        wardrobeGoals: '',
+        budgetRange: '',
+        lifestyle: ''
+      });
+    }
+  }, []);
+
+  const defaultQuestions = [
     {
       id: 'personal',
       title: 'Контактная информация',
@@ -127,6 +147,7 @@ const Index = () => {
     }
   ];
 
+  const questions = activeQuiz?.questions || defaultQuestions;
   const currentQuestion = questions[step];
   const progress = ((step + 1) / questions.length) * 100;
 
@@ -176,13 +197,18 @@ const Index = () => {
   };
 
   const canProceed = () => {
-    if (currentQuestion.id === 'personal') {
-      return quizData.name.trim() !== '';
+    if (!currentQuestion) return false;
+    
+    if (currentQuestion.fields) {
+      return currentQuestion.fields.some((f: any) => 
+        f.required && quizData[f.name]?.trim()
+      ) || currentQuestion.fields.every((f: any) => !f.required);
     }
-    if (currentQuestion.type === 'radio') {
-      const fieldValue = quizData[currentQuestion.field as keyof QuizData];
-      return fieldValue !== '';
+    
+    if (currentQuestion.type === 'radio' && currentQuestion.field) {
+      return quizData[currentQuestion.field] !== '';
     }
+    
     return true;
   };
 
@@ -195,10 +221,10 @@ const Index = () => {
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8 animate-fade-in">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-3">
-            Стилист-тест
+            {activeQuiz?.name || 'Стилист-тест'}
           </h1>
           <p className="text-gray-600 text-lg">
-            Узнайте свой идеальный стиль за 8 шагов
+            {activeQuiz?.description || `Узнайте свой идеальный стиль за ${questions.length} шагов`}
           </p>
         </div>
 
@@ -232,7 +258,7 @@ const Index = () => {
                     <Input
                       id={field.name}
                       type={field.type}
-                      value={quizData[field.name as keyof QuizData]}
+                      value={quizData[field.name] || ''}
                       onChange={(e) => handleInputChange(field.name, e.target.value)}
                       className="border-gray-300"
                       required={field.required}
@@ -242,9 +268,9 @@ const Index = () => {
               </div>
             )}
 
-            {currentQuestion.type === 'radio' && (
+            {currentQuestion.type === 'radio' && currentQuestion.field && (
               <RadioGroup
-                value={quizData[currentQuestion.field as keyof QuizData]}
+                value={quizData[currentQuestion.field] || ''}
                 onValueChange={(value) => handleInputChange(currentQuestion.field!, value)}
                 className="space-y-3"
               >
@@ -259,10 +285,10 @@ const Index = () => {
               </RadioGroup>
             )}
 
-            {currentQuestion.type === 'textarea' && (
+            {currentQuestion.type === 'textarea' && currentQuestion.field && (
               <div className="space-y-2">
                 <Textarea
-                  value={quizData[currentQuestion.field as keyof QuizData]}
+                  value={quizData[currentQuestion.field] || ''}
                   onChange={(e) => handleInputChange(currentQuestion.field!, e.target.value)}
                   placeholder={currentQuestion.placeholder}
                   className="min-h-32 border-gray-300 resize-none"
@@ -387,14 +413,20 @@ const AdminPanel = ({ onBack }: { onBack: () => void }) => {
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-white p-4">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">Результаты тестирования</h1>
+          <h1 className="text-3xl font-bold text-gray-800">Админ-панель</h1>
           <Button onClick={onBack} variant="outline">
             <Icon name="LogOut" size={20} className="mr-2" />
             Выйти
           </Button>
         </div>
 
-        <div className="space-y-4">
+        <Tabs defaultValue="responses" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="responses">Результаты</TabsTrigger>
+            <TabsTrigger value="builder">Конструктор тестов</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="responses" className="space-y-4">
           {responses.length === 0 ? (
             <Card className="p-8 text-center">
               <p className="text-gray-500">Пока нет результатов</p>
@@ -449,7 +481,12 @@ const AdminPanel = ({ onBack }: { onBack: () => void }) => {
               </Card>
             ))
           )}
-        </div>
+          </TabsContent>
+
+          <TabsContent value="builder">
+            <QuizBuilder />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
