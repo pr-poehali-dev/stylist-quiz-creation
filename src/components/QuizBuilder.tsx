@@ -47,11 +47,12 @@ export const QuizBuilder = () => {
     options: '',
     placeholder: ''
   });
+  
+  const [customFields, setCustomFields] = useState<Array<{ name: string; label: string; type: string; required: boolean }>>([]);
 
   const saveQuizzes = (updatedQuizzes: Quiz[]) => {
     localStorage.setItem('quizTemplates', JSON.stringify(updatedQuizzes));
     setQuizzes(updatedQuizzes);
-    window.dispatchEvent(new CustomEvent('quizTemplatesUpdated'));
   };
 
   const createNewQuiz = () => {
@@ -109,6 +110,7 @@ export const QuizBuilder = () => {
         options: question.options?.join('\n') || '',
         placeholder: question.placeholder || ''
       });
+      setCustomFields(question.fields || []);
     } else {
       setEditingQuestion(null);
       setQuestionForm({
@@ -119,6 +121,7 @@ export const QuizBuilder = () => {
         options: '',
         placeholder: ''
       });
+      setCustomFields([]);
     }
     setShowQuestionDialog(true);
   };
@@ -131,12 +134,17 @@ export const QuizBuilder = () => {
       title: questionForm.title,
       description: questionForm.description,
       type: questionForm.type,
-      field: questionForm.field || questionForm.title.toLowerCase().replace(/\s+/g, '_'),
+      ...(questionForm.type === 'fields' ? {} : {
+        field: questionForm.field || questionForm.title.toLowerCase().replace(/\s+/g, '_')
+      }),
       ...(questionForm.type === 'radio' && {
         options: questionForm.options.split('\n').filter(o => o.trim())
       }),
       ...(questionForm.type === 'textarea' && {
         placeholder: questionForm.placeholder
+      }),
+      ...(questionForm.type === 'fields' && customFields.length > 0 && {
+        fields: customFields
       })
     };
 
@@ -251,17 +259,22 @@ export const QuizBuilder = () => {
                       <SelectItem value="text">Короткий текст</SelectItem>
                       <SelectItem value="textarea">Длинный текст</SelectItem>
                       <SelectItem value="radio">Выбор варианта</SelectItem>
+                      <SelectItem value="fields">Несколько полей</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label>Ключ поля (для сохранения)</Label>
-                  <Input
-                    value={questionForm.field}
-                    onChange={(e) => setQuestionForm({ ...questionForm, field: e.target.value })}
-                    placeholder="Например: age_range"
-                  />
-                </div>
+                
+                {questionForm.type !== 'fields' && (
+                  <div>
+                    <Label>Ключ поля (для сохранения)</Label>
+                    <Input
+                      value={questionForm.field}
+                      onChange={(e) => setQuestionForm({ ...questionForm, field: e.target.value })}
+                      placeholder="Например: age_range"
+                    />
+                  </div>
+                )}
+                
                 {questionForm.type === 'radio' && (
                   <div>
                     <Label>Варианты ответов (каждый с новой строки)</Label>
@@ -273,6 +286,7 @@ export const QuizBuilder = () => {
                     />
                   </div>
                 )}
+                
                 {questionForm.type === 'textarea' && (
                   <div>
                     <Label>Подсказка</Label>
@@ -281,6 +295,99 @@ export const QuizBuilder = () => {
                       onChange={(e) => setQuestionForm({ ...questionForm, placeholder: e.target.value })}
                       placeholder="Например: Опишите ваш стиль..."
                     />
+                  </div>
+                )}
+                
+                {questionForm.type === 'fields' && (
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Label>Поля ввода</Label>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setCustomFields([...customFields, { name: '', label: '', type: 'text', required: false }])}
+                        className="bg-gradient-to-r from-pink-400 to-purple-400"
+                      >
+                        <Icon name="Plus" size={16} className="mr-1" />
+                        Добавить поле
+                      </Button>
+                    </div>
+                    {customFields.map((field, index) => (
+                      <Card key={index} className="p-3">
+                        <div className="space-y-2">
+                          <div className="flex gap-2">
+                            <div className="flex-1">
+                              <Label className="text-xs">Название поля</Label>
+                              <Input
+                                value={field.label}
+                                onChange={(e) => {
+                                  const updated = [...customFields];
+                                  updated[index].label = e.target.value;
+                                  setCustomFields(updated);
+                                }}
+                                placeholder="Имя"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <Label className="text-xs">Ключ</Label>
+                              <Input
+                                value={field.name}
+                                onChange={(e) => {
+                                  const updated = [...customFields];
+                                  updated[index].name = e.target.value;
+                                  setCustomFields(updated);
+                                }}
+                                placeholder="name"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex gap-2 items-end">
+                            <div className="flex-1">
+                              <Label className="text-xs">Тип</Label>
+                              <Select
+                                value={field.type}
+                                onValueChange={(value) => {
+                                  const updated = [...customFields];
+                                  updated[index].type = value;
+                                  setCustomFields(updated);
+                                }}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="text">Текст</SelectItem>
+                                  <SelectItem value="email">Email</SelectItem>
+                                  <SelectItem value="tel">Телефон</SelectItem>
+                                  <SelectItem value="number">Число</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={field.required}
+                                onChange={(e) => {
+                                  const updated = [...customFields];
+                                  updated[index].required = e.target.checked;
+                                  setCustomFields(updated);
+                                }}
+                                className="w-4 h-4"
+                              />
+                              <Label className="text-xs">Обязательное</Label>
+                            </div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => setCustomFields(customFields.filter((_, i) => i !== index))}
+                            >
+                              <Icon name="Trash2" size={16} />
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
                   </div>
                 )}
                 <div className="flex gap-2 pt-4">

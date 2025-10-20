@@ -34,54 +34,40 @@ const Index = () => {
   const [quizData, setQuizData] = useState<any>({});
 
   useEffect(() => {
-    const loadQuizData = () => {
-      const templates = JSON.parse(localStorage.getItem('quizTemplates') || '[]');
-      const savedStep = Cookies.get('quizStep');
-      const savedData = Cookies.get('quizData');
+    const templates = JSON.parse(localStorage.getItem('quizTemplates') || '[]');
+    const savedStep = Cookies.get('quizStep');
+    const savedData = Cookies.get('quizData');
+    
+    if (templates.length > 0) {
+      setActiveQuiz(templates[0]);
       
-      if (templates.length > 0) {
-        setActiveQuiz(templates[0]);
-        
-        if (savedStep) {
-          setStep(parseInt(savedStep));
-        }
-        
-        if (savedData) {
-          try {
-            setQuizData(JSON.parse(savedData));
-          } catch (e) {
-            console.error('Error parsing saved quiz data:', e);
-          }
-        } else {
-          const initialData: any = {};
-          templates[0].questions.forEach((q: any) => {
-            if (q.field) {
-              initialData[q.field] = '';
-            }
-            if (q.fields) {
-              q.fields.forEach((f: any) => {
-                initialData[f.name] = '';
-              });
-            }
-          });
-          setQuizData(initialData);
+      if (savedStep) {
+        setStep(parseInt(savedStep));
+      }
+      
+      if (savedData) {
+        try {
+          setQuizData(JSON.parse(savedData));
+        } catch (e) {
+          console.error('Error parsing saved quiz data:', e);
         }
       } else {
-        setActiveQuiz(null);
+        const initialData: any = {};
+        templates[0].questions.forEach((q: any) => {
+          if (q.field) {
+            initialData[q.field] = '';
+          }
+          if (q.fields) {
+            q.fields.forEach((f: any) => {
+              initialData[f.name] = '';
+            });
+          }
+        });
+        setQuizData(initialData);
       }
-    };
-    
-    loadQuizData();
-    
-    const handleQuizUpdate = () => {
-      const savedData = Cookies.get('quizData');
-      if (!savedData || Object.keys(JSON.parse(savedData || '{}')).length === 0) {
-        loadQuizData();
-      }
-    };
-    
-    window.addEventListener('quizTemplatesUpdated', handleQuizUpdate);
-    return () => window.removeEventListener('quizTemplatesUpdated', handleQuizUpdate);
+    } else {
+      setActiveQuiz(null);
+    }
   }, []);
 
   const questions = activeQuiz?.questions || [];
