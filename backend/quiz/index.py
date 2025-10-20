@@ -222,7 +222,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         if isinstance(answers, str):
                             answers = json.loads(answers)
                         if isinstance(answers, dict):
-                            resp_data.update(answers)
+                            for key, value in answers.items():
+                                if key not in ['contact', 'answers', 'name', 'phone', 'email']:
+                                    resp_data[key] = value
                     except Exception as e:
                         print(f"Error parsing answers: {e}")
                 

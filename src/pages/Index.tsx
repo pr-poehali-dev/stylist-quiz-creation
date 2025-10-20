@@ -794,18 +794,23 @@ const AdminPanel = ({ onBack }: { onBack: () => void }) => {
                 </CardHeader>
                 <CardContent className="space-y-4 p-4 sm:p-6">
                   {Object.entries(response).map(([key, value]) => {
-                    if (key === 'id' || key === 'completed_at') return null;
+                    if (key === 'id' || key === 'completed_at' || key === 'contact' || key === 'answers') return null;
                     
-                    const displayValue = Array.isArray(value) 
-                      ? value.join(', ') 
-                      : value;
+                    let displayValue = '';
+                    if (Array.isArray(value)) {
+                      displayValue = value.join(', ');
+                    } else if (typeof value === 'object' && value !== null) {
+                      return null;
+                    } else {
+                      displayValue = String(value);
+                    }
                     
                     if (!displayValue || displayValue === '') return null;
                     
                     return (
                       <div key={key} className="border-b pb-3 last:border-0">
                         <p className="text-xs sm:text-sm font-medium text-gray-500 mb-1 capitalize">
-                          {key.replace(/([A-Z])/g, ' $1').trim()}
+                          {key.replace(/([A-Z_])/g, ' $1').trim()}
                         </p>
                         <p className="text-sm sm:text-base">{displayValue}</p>
                       </div>
