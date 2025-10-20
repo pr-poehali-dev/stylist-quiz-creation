@@ -26,7 +26,9 @@ interface QuizData {
 
 const Index = () => {
   const [step, setStep] = useState(0);
-  const [currentPage, setCurrentPage] = useState<'quiz' | 'contacts'>('quiz');
+  const [currentPage, setCurrentPage] = useState<'quiz' | 'contacts'>(() => {
+    return (localStorage.getItem('currentPage') as 'quiz' | 'contacts') || 'quiz';
+  });
   const [showAdmin, setShowAdmin] = useState(() => {
     return localStorage.getItem('showAdmin') === 'true';
   });
@@ -197,14 +199,20 @@ const Index = () => {
             </div>
             <div className="flex gap-6">
               <button
-                onClick={() => setCurrentPage('quiz')}
+                onClick={() => {
+                  setCurrentPage('quiz');
+                  localStorage.setItem('currentPage', 'quiz');
+                }}
                 className={`${currentPage === 'quiz' ? 'text-purple-400' : 'text-gray-700'} hover:text-purple-400 transition-colors font-medium`}
                 style={{ fontFamily: "'Montserrat', sans-serif" }}
               >
                 Главная
               </button>
               <button
-                onClick={() => setCurrentPage('contacts')}
+                onClick={() => {
+                  setCurrentPage('contacts');
+                  localStorage.setItem('currentPage', 'contacts');
+                }}
                 className={`${currentPage === 'contacts' ? 'text-purple-400' : 'text-gray-700'} hover:text-purple-400 transition-colors font-medium`}
                 style={{ fontFamily: "'Montserrat', sans-serif" }}
               >
