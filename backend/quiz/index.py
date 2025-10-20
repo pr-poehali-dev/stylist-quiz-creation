@@ -6,223 +6,230 @@ from psycopg2.extras import RealDictCursor
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
-    Business: Handle quiz templates, responses and admin authentication
-    Args: event - dict with httpMethod, body, queryStringParameters, path
-          context - object with attributes: request_id, function_name
-    Returns: HTTP response dict
+    Business: API для работы с тестами - создание, получение, обновление тестов и сохранение ответов
+    Args: event с httpMethod, body, queryStringParameters; context с request_id
+    Returns: HTTP response с statusCode, headers, body
     '''
     method: str = event.get('httpMethod', 'GET')
-    path: str = event.get('path', '')
+    query_params = event.get('queryStringParameters', {}) or {}
+    path: str = query_params.get('path', '')
+    
+    headers = {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, X-User-Id, X-Auth-Token'
+    }
     
     if method == 'OPTIONS':
         return {
             'statusCode': 200,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, X-User-Id',
-                'Access-Control-Max-Age': '86400'
-            },
+            'headers': headers,
             'body': '',
             'isBase64Encoded': False
         }
     
     db_url = os.environ.get('DATABASE_URL')
+    if not db_url:
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'DATABASE_URL not configured'}),
+            'isBase64Encoded': False
+        }
     
-    if '/template' in path:
+    conn = None
+    try:
         conn = psycopg2.connect(db_url)
-        cur = conn.cursor()
+        conn.autocommit = True
+        cur = conn.cursor(cursor_factory=RealDictCursor)
         
-        if method == 'GET':
-            cur.execute("""
-                SELECT id, name, description, questions, created_at, updated_at 
+        if method == 'GET' and '/template' in path:
+            cur.execute('''
+                SELECT id, title, description, welcome_title, welcome_subtitle, 
+                       questions, created_at, updated_at 
                 FROM t_p90617481_stylist_quiz_creatio.quiz_templates 
-                ORDER BY updated_at DESC 
-                LIMIT 1
-            """)
-            row = cur.fetchone()
-            cur.close()
-            conn.close()
+                ORDER BY id DESC LIMIT 1
+            ''')
+            result = cur.fetchone()
             
-            if row:
-                quiz = {
-                    'id': row[0],
-                    'name': row[1],
-                    'description': row[2],
-                    'questions': row[3],
-                    'created_at': row[4].isoformat() if row[4] else None,
-                    'updated_at': row[5].isoformat() if row[5] else None
-                }
-                return {
-                    'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps(quiz),
-                    'isBase64Encoded': False
-                }
-            else:
+            if not result:
                 return {
                     'statusCode': 404,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'error': 'No quiz found'}),
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Template not found'}),
                     'isBase64Encoded': False
                 }
-        
-        elif method == 'POST':
-            body_data = json.loads(event.get('body', '{}'))
-            name = body_data.get('name')
-            description = body_data.get('description')
-            questions = body_data.get('questions')
             
-            cur.execute("""
-                INSERT INTO t_p90617481_stylist_quiz_creatio.quiz_templates 
-                (name, description, questions) 
-                VALUES (%s, %s, %s) 
-                RETURNING id, name, description, questions, created_at, updated_at
-            """, (name, description, json.dumps(questions)))
-            
-            row = cur.fetchone()
-            conn.commit()
-            cur.close()
-            conn.close()
-            
-            quiz = {
-                'id': row[0],
-                'name': row[1],
-                'description': row[2],
-                'questions': row[3],
-                'created_at': row[4].isoformat() if row[4] else None,
-                'updated_at': row[5].isoformat() if row[5] else None
-            }
+            template = dict(result)
+            template['created_at'] = template['created_at'].isoformat() if template['created_at'] else None
+            template['updated_at'] = template['updated_at'].isoformat() if template['updated_at'] else None
             
             return {
-                'statusCode': 201,
-                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps(quiz),
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps(template),
                 'isBase64Encoded': False
             }
         
-        elif method == 'PUT':
+        elif method == 'POST' and '/template' in path:
             body_data = json.loads(event.get('body', '{}'))
-            quiz_id = body_data.get('id')
-            name = body_data.get('name')
-            description = body_data.get('description')
-            questions = body_data.get('questions')
             
-            cur.execute("""
-                UPDATE t_p90617481_stylist_quiz_creatio.quiz_templates 
-                SET name = %s, description = %s, questions = %s, updated_at = CURRENT_TIMESTAMP 
-                WHERE id = %s 
-                RETURNING id, name, description, questions, created_at, updated_at
-            """, (name, description, json.dumps(questions), quiz_id))
+            cur.execute('''
+                INSERT INTO t_p90617481_stylist_quiz_creatio.quiz_templates 
+                (title, description, welcome_title, welcome_subtitle, questions, name)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                RETURNING id, title, description, welcome_title, welcome_subtitle, 
+                          questions, created_at, updated_at
+            ''', (
+                body_data.get('title', ''),
+                body_data.get('description', ''),
+                body_data.get('welcomeTitle', ''),
+                body_data.get('welcomeSubtitle', ''),
+                json.dumps(body_data.get('questions', [])),
+                body_data.get('title', 'Новый тест')
+            ))
             
-            row = cur.fetchone()
-            conn.commit()
-            cur.close()
-            conn.close()
+            result = cur.fetchone()
+            template = dict(result)
+            template['created_at'] = template['created_at'].isoformat() if template['created_at'] else None
+            template['updated_at'] = template['updated_at'].isoformat() if template['updated_at'] else None
             
-            if row:
-                quiz = {
-                    'id': row[0],
-                    'name': row[1],
-                    'description': row[2],
-                    'questions': row[3],
-                    'created_at': row[4].isoformat() if row[4] else None,
-                    'updated_at': row[5].isoformat() if row[5] else None
-                }
+            return {
+                'statusCode': 201,
+                'headers': headers,
+                'body': json.dumps(template),
+                'isBase64Encoded': False
+            }
+        
+        elif method == 'PUT' and '/template' in path:
+            body_data = json.loads(event.get('body', '{}'))
+            template_id = body_data.get('id')
+            
+            if not template_id:
+                cur.execute('SELECT id FROM t_p90617481_stylist_quiz_creatio.quiz_templates ORDER BY id DESC LIMIT 1')
+                result = cur.fetchone()
+                template_id = result['id'] if result else None
+            
+            if not template_id:
                 return {
-                    'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps(quiz),
+                    'statusCode': 404,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Template not found'}),
                     'isBase64Encoded': False
                 }
-    
-    if method == 'POST' and '/response' in path:
-        body_data = json.loads(event.get('body', '{}'))
+            
+            cur.execute('''
+                UPDATE t_p90617481_stylist_quiz_creatio.quiz_templates 
+                SET title = %s, 
+                    description = %s, 
+                    welcome_title = %s, 
+                    welcome_subtitle = %s, 
+                    questions = %s,
+                    name = %s,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+                RETURNING id, title, description, welcome_title, welcome_subtitle, 
+                          questions, created_at, updated_at
+            ''', (
+                body_data.get('title', ''),
+                body_data.get('description', ''),
+                body_data.get('welcomeTitle', ''),
+                body_data.get('welcomeSubtitle', ''),
+                json.dumps(body_data.get('questions', [])),
+                body_data.get('title', 'Тест'),
+                template_id
+            ))
+            
+            result = cur.fetchone()
+            if not result:
+                return {
+                    'statusCode': 404,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Template not found'}),
+                    'isBase64Encoded': False
+                }
+            
+            template = dict(result)
+            template['created_at'] = template['created_at'].isoformat() if template['created_at'] else None
+            template['updated_at'] = template['updated_at'].isoformat() if template['updated_at'] else None
+            
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps(template),
+                'isBase64Encoded': False
+            }
         
-        conn = psycopg2.connect(db_url)
-        cur = conn.cursor()
+        elif method == 'POST' and '/response' in path:
+            body_data = json.loads(event.get('body', '{}'))
+            
+            cur.execute('SELECT id FROM t_p90617481_stylist_quiz_creatio.quiz_templates ORDER BY id DESC LIMIT 1')
+            template_result = cur.fetchone()
+            template_id = template_result['id'] if template_result else None
+            
+            cur.execute('''
+                INSERT INTO t_p90617481_stylist_quiz_creatio.quiz_responses 
+                (template_id, contact_name, contact_phone, contact_email, answers, name, phone, email)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            ''', (
+                template_id,
+                body_data.get('contact', {}).get('name', ''),
+                body_data.get('contact', {}).get('phone', ''),
+                body_data.get('contact', {}).get('email', ''),
+                json.dumps(body_data.get('answers', [])),
+                body_data.get('contact', {}).get('name', ''),
+                body_data.get('contact', {}).get('phone', ''),
+                body_data.get('contact', {}).get('email', '')
+            ))
+            
+            result = cur.fetchone()
+            
+            return {
+                'statusCode': 201,
+                'headers': headers,
+                'body': json.dumps({'success': True, 'id': result['id']}),
+                'isBase64Encoded': False
+            }
         
-        cur.execute("""
-            INSERT INTO quiz_responses 
-            (name, email, phone, age_range, body_type, style_preferences, 
-             color_preferences, wardrobe_goals, budget_range, lifestyle)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (
-            body_data.get('name'),
-            body_data.get('email'),
-            body_data.get('phone'),
-            body_data.get('age_range'),
-            body_data.get('body_type'),
-            body_data.get('style_preferences'),
-            body_data.get('color_preferences'),
-            body_data.get('wardrobe_goals'),
-            body_data.get('budget_range'),
-            body_data.get('lifestyle')
-        ))
-        
-        conn.commit()
-        cur.close()
-        conn.close()
+        elif method == 'GET' and '/admin/responses' in path:
+            cur.execute('''
+                SELECT id, template_id, contact_name, contact_phone, contact_email, 
+                       answers, completed_at 
+                FROM t_p90617481_stylist_quiz_creatio.quiz_responses 
+                ORDER BY completed_at DESC
+            ''')
+            results = cur.fetchall()
+            
+            responses = []
+            for row in results:
+                resp = dict(row)
+                resp['completed_at'] = resp['completed_at'].isoformat() if resp['completed_at'] else None
+                responses.append(resp)
+            
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps(responses),
+                'isBase64Encoded': False
+            }
         
         return {
-            'statusCode': 200,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            'body': json.dumps({'success': True}),
+            'statusCode': 404,
+            'headers': headers,
+            'body': json.dumps({'error': 'Not found'}),
             'isBase64Encoded': False
         }
     
-    if method == 'GET' and '/admin/responses' in path:
-        conn = psycopg2.connect(db_url)
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-        
-        cur.execute("""
-            SELECT id, name, email, phone, age_range, body_type, 
-                   style_preferences, color_preferences, wardrobe_goals, 
-                   budget_range, lifestyle, completed_at
-            FROM quiz_responses
-            ORDER BY completed_at DESC
-        """)
-        
-        responses = cur.fetchall()
-        cur.close()
-        conn.close()
-        
-        result = []
-        for row in responses:
-            result.append({
-                'id': row['id'],
-                'name': row['name'],
-                'email': row['email'],
-                'phone': row['phone'],
-                'age_range': row['age_range'],
-                'body_type': row['body_type'],
-                'style_preferences': row['style_preferences'],
-                'color_preferences': row['color_preferences'],
-                'wardrobe_goals': row['wardrobe_goals'],
-                'budget_range': row['budget_range'],
-                'lifestyle': row['lifestyle'],
-                'completed_at': row['completed_at'].isoformat() if row['completed_at'] else None
-            })
-        
+    except Exception as e:
         return {
-            'statusCode': 200,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            'body': json.dumps(result),
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': str(e)}),
             'isBase64Encoded': False
         }
     
-    return {
-        'statusCode': 405,
-        'headers': {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        },
-        'body': json.dumps({'error': 'Method not allowed'}),
-        'isBase64Encoded': False
-    }
+    finally:
+        if conn:
+            conn.close()

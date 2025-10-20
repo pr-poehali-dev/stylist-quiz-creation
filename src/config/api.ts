@@ -1,6 +1,3 @@
-// This file will be auto-generated after backend deployment
-// For now using placeholder - will be updated by sync_backend
-
 export const API_CONFIG = {
-  quiz: '/api/quiz',
+  quiz: 'https://functions.poehali.dev/6d0124e7-a678-4b7d-b68b-45af0b9bde08',
 };

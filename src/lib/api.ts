@@ -1,12 +1,9 @@
 import { API_CONFIG } from "@/config/api";
 
-const USE_API = true; // Включить когда backend будет развернут
+const USE_API = true;
 
 const getApiUrl = (path: string) => {
-  if (API_CONFIG.quiz.startsWith("http")) {
-    return `${API_CONFIG.quiz}${path}`;
-  }
-  return `${API_CONFIG.quiz}${path}`;
+  return `${API_CONFIG.quiz}?path=${path}`;
 };
 
 export const quizApi = {

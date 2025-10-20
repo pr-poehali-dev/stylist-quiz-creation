@@ -1,31 +1,59 @@
 {
   "tests": [
     {
+      "name": "Create quiz template",
+      "method": "POST",
+      "path": "/?path=/template",
+      "body": {
+        "title": "Тест стиля",
+        "description": "Определим ваш стиль",
+        "welcomeTitle": "Добро пожаловать",
+        "welcomeSubtitle": "Пройдите короткий тест",
+        "questions": [
+          {
+            "id": "q1",
+            "type": "single",
+            "question": "Ваш возраст",
+            "options": ["18-25", "26-35", "36-45"]
+          }
+        ]
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "id": 2
+      }
+    },
+    {
       "name": "Get quiz template",
       "method": "GET",
-      "path": "/template",
-      "expectedStatus": 404
+      "path": "/?path=/template",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "id": 2
+      }
     },
     {
       "name": "Submit quiz response",
       "method": "POST",
-      "path": "/response",
+      "path": "/?path=/response",
       "body": {
-        "name": "Анна Иванова",
-        "email": "anna@example.com",
-        "phone": "+7 999 123-45-67",
-        "age_range": "26-35",
-        "body_type": "Песочные часы",
-        "style_preferences": "Классический, деловой",
-        "color_preferences": "Пастельные тона",
-        "wardrobe_goals": "Обновить деловой гардероб",
-        "budget_range": "30 000 - 50 000 ₽",
-        "lifestyle": "Работа в офисе"
+        "contact": {
+          "name": "Анна",
+          "phone": "+79991234567",
+          "email": "anna@test.com"
+        },
+        "answers": [
+          {
+            "questionId": "q1",
+            "answer": "26-35"
+          }
+        ]
       },
-      "expectedStatus": 200,
+      "expectedStatus": 201,
       "expectedBody": {
         "success": true
-      }
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }
