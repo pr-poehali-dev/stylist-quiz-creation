@@ -51,6 +51,7 @@ export const QuizBuilder = () => {
   const saveQuizzes = (updatedQuizzes: Quiz[]) => {
     localStorage.setItem('quizTemplates', JSON.stringify(updatedQuizzes));
     setQuizzes(updatedQuizzes);
+    window.dispatchEvent(new CustomEvent('quizTemplatesUpdated'));
   };
 
   const createNewQuiz = () => {
