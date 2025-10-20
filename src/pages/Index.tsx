@@ -187,16 +187,35 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-white flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
-        <div className="text-center mb-6 md:mb-8 animate-fade-in px-2">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-2 md:mb-3">
-            {activeQuiz?.name || 'Стилист-тест'}
-          </h1>
-          <p className="text-gray-600 text-base md:text-lg">
-            {activeQuiz?.description || `Узнайте свой идеальный стиль за ${questions.length} шагов`}
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-white">
+      <nav className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="text-xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+              {activeQuiz?.name || 'Стилист-тест'}
+            </div>
+            <div className="flex gap-6">
+              <a href="#blog" className="text-gray-700 hover:text-purple-400 transition-colors font-medium">
+                Блог
+              </a>
+              <a href="#contacts" className="text-gray-700 hover:text-purple-400 transition-colors font-medium">
+                Контакты
+              </a>
+            </div>
+          </div>
         </div>
+      </nav>
+      
+      <div className="flex items-center justify-center p-4 pt-12">
+        <div className="w-full max-w-2xl">
+          <div className="text-center mb-6 md:mb-8 animate-fade-in px-2">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-2 md:mb-3">
+              {activeQuiz?.name || 'Стилист-тест'}
+            </h1>
+            <p className="text-gray-600 text-base md:text-lg">
+              {activeQuiz?.description || `Узнайте свой идеальный стиль за ${questions.length} шагов`}
+            </p>
+          </div>
 
         <Card className="shadow-xl border-0 animate-fade-in">
           <CardHeader className="space-y-3 md:space-y-4 p-4 sm:p-6">
@@ -335,6 +354,7 @@ const Index = () => {
         >
           Вход для администратора
         </button>
+        </div>
       </div>
     </div>
   );
