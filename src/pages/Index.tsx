@@ -167,68 +167,145 @@ const Index = () => {
     }} />;
   }
 
+  const renderNav = () => (
+    <nav className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <div className="text-xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent" style={{ fontFamily: "'Playfair Display', serif" }}>
+            Julia Style
+          </div>
+          <div className="flex gap-6">
+            <button
+              onClick={() => {
+                setCurrentPage('quiz');
+                localStorage.setItem('currentPage', 'quiz');
+              }}
+              className={`${currentPage === 'quiz' ? 'text-purple-400' : 'text-gray-700'} hover:text-purple-400 transition-colors font-medium`}
+              style={{ fontFamily: "'Montserrat', sans-serif" }}
+            >
+              Главная
+            </button>
+            <button
+              onClick={() => {
+                setCurrentPage('contacts');
+                localStorage.setItem('currentPage', 'contacts');
+              }}
+              className={`${currentPage === 'contacts' ? 'text-purple-400' : 'text-gray-700'} hover:text-purple-400 transition-colors font-medium`}
+              style={{ fontFamily: "'Montserrat', sans-serif" }}
+            >
+              Контакты
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+
   if (!activeQuiz) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-white flex items-center justify-center p-4">
-        <Card className="max-w-md shadow-xl border-0 text-center p-8">
-          <Icon name="ClipboardList" size={64} className="mx-auto text-gray-400 mb-4" />
-          <h1 className="text-2xl font-bold text-gray-800 mb-3">
-            Тест не создан
-          </h1>
-          <p className="text-gray-600 mb-6">
-            Администратор ещё не создал тест. Пожалуйста, зайдите позже.
-          </p>
-          <button
-            onClick={() => setShowAdmin(true)}
-            className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            Вход для администратора
-          </button>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-white">
+        {renderNav()}
+        {currentPage === 'contacts' ? (
+          <div className="flex items-center justify-center p-4 pt-12">
+            <div className="w-full max-w-4xl">
+              <Card className="shadow-xl border-0">
+                <CardHeader className="text-center space-y-4 p-8">
+                  <CardTitle className="text-4xl font-bold" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                    Юлия
+                  </CardTitle>
+                  <CardDescription className="text-lg" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                    Персональный стилист
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-8 space-y-6">
+                  <div className="prose max-w-none">
+                    <p className="text-gray-700 text-lg leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                      Привет! Я Юлия — персональный стилист с многолетним опытом работы. 
+                      Помогаю женщинам найти свой уникальный стиль и чувствовать себя уверенно в любой ситуации.
+                    </p>
+                    <p className="text-gray-700 text-lg leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                      Моя специализация — создание индивидуального гардероба, который подчеркивает вашу красоту 
+                      и соответствует вашему образу жизни. Работаю с разными стилями: от элегантной классики 
+                      до современного casual.
+                    </p>
+                  </div>
+
+                  <div className="border-t border-gray-200 pt-6 mt-6">
+                    <h3 className="text-2xl font-bold mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                      Мои услуги:
+                    </h3>
+                    <ul className="space-y-3" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                      <li className="flex items-start gap-3">
+                        <Icon name="CheckCircle" className="text-purple-400 mt-1 flex-shrink-0" size={20} />
+                        <span className="text-gray-700">Разбор гардероба и шоппинг-сопровождение</span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <Icon name="CheckCircle" className="text-purple-400 mt-1 flex-shrink-0" size={20} />
+                        <span className="text-gray-700">Подбор капсульного гардероба</span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <Icon name="CheckCircle" className="text-purple-400 mt-1 flex-shrink-0" size={20} />
+                        <span className="text-gray-700">Консультации по стилю и имиджу</span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <Icon name="CheckCircle" className="text-purple-400 mt-1 flex-shrink-0" size={20} />
+                        <span className="text-gray-700">Подготовка образов для особых мероприятий</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="border-t border-gray-200 pt-6 mt-6">
+                    <h3 className="text-2xl font-bold mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                      Свяжитесь со мной:
+                    </h3>
+                    <a
+                      href="https://t.me/YuliyTa"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-3 bg-gradient-to-r from-pink-400 to-purple-400 hover:from-pink-500 hover:to-purple-500 text-white px-8 py-4 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                      style={{ fontFamily: "'Montserrat', sans-serif" }}
+                    >
+                      <Icon name="Send" size={24} />
+                      <span className="text-lg font-semibold">Написать в Telegram</span>
+                    </a>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center p-4 pt-12">
+            <Card className="max-w-md shadow-xl border-0 text-center p-8">
+              <Icon name="ClipboardList" size={64} className="mx-auto text-gray-400 mb-4" />
+              <h1 className="text-2xl font-bold text-gray-800 mb-3">
+                Тест не создан
+              </h1>
+              <p className="text-gray-600 mb-6">
+                Администратор ещё не создал тест. Пожалуйста, зайдите позже.
+              </p>
+              <button
+                onClick={() => setShowAdmin(true)}
+                className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                Вход для администратора
+              </button>
+            </Card>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-white">
-      <nav className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="text-xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent" style={{ fontFamily: "'Playfair Display', serif" }}>
-              Julia Style
-            </div>
-            <div className="flex gap-6">
-              <button
-                onClick={() => {
-                  setCurrentPage('quiz');
-                  localStorage.setItem('currentPage', 'quiz');
-                }}
-                className={`${currentPage === 'quiz' ? 'text-purple-400' : 'text-gray-700'} hover:text-purple-400 transition-colors font-medium`}
-                style={{ fontFamily: "'Montserrat', sans-serif" }}
-              >
-                Главная
-              </button>
-              <button
-                onClick={() => {
-                  setCurrentPage('contacts');
-                  localStorage.setItem('currentPage', 'contacts');
-                }}
-                className={`${currentPage === 'contacts' ? 'text-purple-400' : 'text-gray-700'} hover:text-purple-400 transition-colors font-medium`}
-                style={{ fontFamily: "'Montserrat', sans-serif" }}
-              >
-                Контакты
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      {renderNav()}
       
       {currentPage === 'contacts' ? (
         <div className="flex items-center justify-center p-4 pt-12">
           <div className="w-full max-w-4xl">
             <Card className="shadow-xl border-0">
               <CardHeader className="text-center space-y-4 p-8">
-                <CardTitle className="text-4xl font-bold" style={{ fontFamily: "'Playfair Display', serif" }}>
+                <CardTitle className="text-4xl font-bold" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Юлия
                 </CardTitle>
                 <CardDescription className="text-lg" style={{ fontFamily: "'Montserrat', sans-serif" }}>
@@ -249,7 +326,7 @@ const Index = () => {
                 </div>
 
                 <div className="border-t border-gray-200 pt-6 mt-6">
-                  <h3 className="text-2xl font-bold mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  <h3 className="text-2xl font-bold mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                     Мои услуги:
                   </h3>
                   <ul className="space-y-3" style={{ fontFamily: "'Montserrat', sans-serif" }}>
@@ -273,7 +350,7 @@ const Index = () => {
                 </div>
 
                 <div className="border-t border-gray-200 pt-6 mt-6">
-                  <h3 className="text-2xl font-bold mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  <h3 className="text-2xl font-bold mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                     Свяжитесь со мной:
                   </h3>
                   <a
