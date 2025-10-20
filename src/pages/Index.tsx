@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Cookies from 'js-cookie';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 import QuizBuilder from '@/components/QuizBuilder';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface QuizData {
   name: string;
@@ -32,30 +34,45 @@ const Index = () => {
   const [quizData, setQuizData] = useState<any>({});
 
   useEffect(() => {
+    const savedStep = Cookies.get('quizStep');
+    const savedData = Cookies.get('quizData');
+    
+    if (savedStep) {
+      setStep(parseInt(savedStep));
+    }
+    
+    if (savedData) {
+      setQuizData(JSON.parse(savedData));
+    }
+    
     const templates = JSON.parse(localStorage.getItem('quizTemplates') || '[]');
     if (templates.length > 0) {
       setActiveQuiz(templates[0]);
-      const initialData: any = {};
-      templates[0].questions.forEach((q: any) => {
-        if (q.field) {
-          initialData[q.field] = '';
-        }
-      });
-      setQuizData(initialData);
+      if (!savedData) {
+        const initialData: any = {};
+        templates[0].questions.forEach((q: any) => {
+          if (q.field) {
+            initialData[q.field] = '';
+          }
+        });
+        setQuizData(initialData);
+      }
     } else {
       setActiveQuiz({ questions: defaultQuestions, name: 'Стилист-тест' });
-      setQuizData({
-        name: '',
-        email: '',
-        phone: '',
-        ageRange: '',
-        bodyType: '',
-        stylePreferences: '',
-        colorPreferences: '',
-        wardrobeGoals: '',
-        budgetRange: '',
-        lifestyle: ''
-      });
+      if (!savedData) {
+        setQuizData({
+          name: '',
+          email: '',
+          phone: '',
+          ageRange: '',
+          bodyType: '',
+          stylePreferences: '',
+          colorPreferences: '',
+          wardrobeGoals: '',
+          budgetRange: '',
+          lifestyle: ''
+        });
+      }
     }
   }, []);
 
@@ -152,18 +169,24 @@ const Index = () => {
   const progress = ((step + 1) / questions.length) * 100;
 
   const handleInputChange = (name: string, value: string) => {
-    setQuizData(prev => ({ ...prev, [name]: value }));
+    const updatedData = { ...quizData, [name]: value };
+    setQuizData(updatedData);
+    Cookies.set('quizData', JSON.stringify(updatedData), { expires: 7 });
   };
 
   const handleNext = () => {
     if (step < questions.length - 1) {
-      setStep(step + 1);
+      const newStep = step + 1;
+      setStep(newStep);
+      Cookies.set('quizStep', newStep.toString(), { expires: 7 });
     }
   };
 
   const handlePrev = () => {
     if (step > 0) {
-      setStep(step - 1);
+      const newStep = step - 1;
+      setStep(newStep);
+      Cookies.set('quizStep', newStep.toString(), { expires: 7 });
     }
   };
 
@@ -181,7 +204,7 @@ const Index = () => {
     });
     localStorage.setItem('quizResponses', JSON.stringify(savedResponses));
     
-    setQuizData({
+    const emptyData = {
       name: '',
       email: '',
       phone: '',
@@ -192,8 +215,11 @@ const Index = () => {
       wardrobeGoals: '',
       budgetRange: '',
       lifestyle: ''
-    });
+    };
+    setQuizData(emptyData);
     setStep(0);
+    Cookies.remove('quizData');
+    Cookies.remove('quizStep');
   };
 
   const canProceed = () => {
@@ -219,24 +245,24 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-white flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
-        <div className="text-center mb-8 animate-fade-in">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-3">
+        <div className="text-center mb-6 md:mb-8 animate-fade-in px-2">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-2 md:mb-3">
             {activeQuiz?.name || 'Стилист-тест'}
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-gray-600 text-base md:text-lg">
             {activeQuiz?.description || `Узнайте свой идеальный стиль за ${questions.length} шагов`}
           </p>
         </div>
 
         <Card className="shadow-xl border-0 animate-fade-in">
-          <CardHeader className="space-y-4">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-2xl">{currentQuestion.title}</CardTitle>
-              <span className="text-sm text-muted-foreground">
+          <CardHeader className="space-y-3 md:space-y-4 p-4 sm:p-6">
+            <div className="flex justify-between items-center gap-2">
+              <CardTitle className="text-lg sm:text-xl md:text-2xl">{currentQuestion.title}</CardTitle>
+              <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
                 {step + 1} / {questions.length}
               </span>
             </div>
-            <CardDescription className="text-base">{currentQuestion.description}</CardDescription>
+            <CardDescription className="text-sm md:text-base">{currentQuestion.description}</CardDescription>
             
             <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
               <div 
@@ -246,7 +272,7 @@ const Index = () => {
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 md:space-y-6 p-4 sm:p-6">
             {currentQuestion.fields && (
               <div className="space-y-4">
                 {currentQuestion.fields.map((field) => (
@@ -296,34 +322,38 @@ const Index = () => {
               </div>
             )}
 
-            <div className="flex justify-between pt-6 gap-3">
+            <div className="flex justify-between pt-4 md:pt-6 gap-2 sm:gap-3">
               <Button
                 onClick={handlePrev}
                 disabled={step === 0}
                 variant="outline"
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
+                size="sm"
               >
-                <Icon name="ChevronLeft" size={20} />
-                Назад
+                <Icon name="ChevronLeft" size={18} className="sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Назад</span>
               </Button>
 
               {step < questions.length - 1 ? (
                 <Button
                   onClick={handleNext}
                   disabled={!canProceed()}
-                  className="flex items-center gap-2 bg-gradient-to-r from-pink-400 to-purple-400 hover:from-pink-500 hover:to-purple-500"
+                  className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-pink-400 to-purple-400 hover:from-pink-500 hover:to-purple-500 text-sm sm:text-base"
+                  size="sm"
                 >
-                  Далее
-                  <Icon name="ChevronRight" size={20} />
+                  <span className="hidden sm:inline">Далее</span>
+                  <span className="sm:hidden">Далее</span>
+                  <Icon name="ChevronRight" size={18} className="sm:w-5 sm:h-5" />
                 </Button>
               ) : (
                 <Button
                   onClick={handleSubmit}
                   disabled={!canProceed()}
-                  className="flex items-center gap-2 bg-gradient-to-r from-pink-400 to-purple-400 hover:from-pink-500 hover:to-purple-500"
+                  className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-pink-400 to-purple-400 hover:from-pink-500 hover:to-purple-500 text-sm sm:text-base"
+                  size="sm"
                 >
                   Отправить
-                  <Icon name="Send" size={20} />
+                  <Icon name="Send" size={18} className="sm:w-5 sm:h-5" />
                 </Button>
               )}
             </div>
@@ -364,6 +394,25 @@ const AdminPanel = ({ onBack }: { onBack: () => void }) => {
   const loadResponses = () => {
     const savedResponses = JSON.parse(localStorage.getItem('quizResponses') || '[]');
     setResponses(savedResponses);
+  };
+
+  const deleteResponse = (responseId: number) => {
+    const updatedResponses = responses.filter(r => r.id !== responseId);
+    setResponses(updatedResponses);
+    localStorage.setItem('quizResponses', JSON.stringify(updatedResponses));
+    toast({
+      title: 'Удалено',
+      description: 'Ответ пользователя удалён'
+    });
+  };
+
+  const clearAllResponses = () => {
+    setResponses([]);
+    localStorage.setItem('quizResponses', '[]');
+    toast({
+      title: 'Очищено',
+      description: 'Все ответы удалены'
+    });
   };
 
   if (!isAuthenticated) {
@@ -410,23 +459,50 @@ const AdminPanel = ({ onBack }: { onBack: () => void }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-white p-4">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-white p-2 sm:p-4">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">Админ-панель</h1>
-          <Button onClick={onBack} variant="outline">
-            <Icon name="LogOut" size={20} className="mr-2" />
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Админ-панель</h1>
+          <Button onClick={onBack} variant="outline" size="sm">
+            <Icon name="LogOut" size={18} className="mr-2" />
             Выйти
           </Button>
         </div>
 
-        <Tabs defaultValue="responses" className="space-y-6">
+        <Tabs defaultValue="responses" className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="responses">Результаты</TabsTrigger>
-            <TabsTrigger value="builder">Конструктор тестов</TabsTrigger>
+            <TabsTrigger value="responses" className="text-sm sm:text-base">Результаты</TabsTrigger>
+            <TabsTrigger value="builder" className="text-sm sm:text-base">Конструктор</TabsTrigger>
           </TabsList>
 
           <TabsContent value="responses" className="space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <p className="text-sm text-gray-600">Всего ответов: {responses.length}</p>
+              {responses.length > 0 && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Icon name="Trash2" size={16} className="mr-2" />
+                      Очистить всё
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Удалить все ответы?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Это действие нельзя отменить. Все ответы пользователей будут удалены безвозвратно.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Отмена</AlertDialogCancel>
+                      <AlertDialogAction onClick={clearAllResponses} className="bg-red-600 hover:bg-red-700">
+                        Удалить всё
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
           {responses.length === 0 ? (
             <Card className="p-8 text-center">
               <p className="text-gray-500">Пока нет результатов</p>
@@ -434,48 +510,75 @@ const AdminPanel = ({ onBack }: { onBack: () => void }) => {
           ) : (
             responses.map((response) => (
               <Card key={response.id} className="shadow-md">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle>{response.name}</CardTitle>
-                      <CardDescription>
-                        {response.email && <span>{response.email}</span>}
-                        {response.phone && <span className="ml-3">{response.phone}</span>}
-                      </CardDescription>
+                <CardHeader className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <CardTitle className="text-lg sm:text-xl">{response.name}</CardTitle>
+                          <CardDescription className="text-xs sm:text-sm mt-1">
+                            {response.email && <span className="block sm:inline">{response.email}</span>}
+                            {response.phone && <span className="block sm:inline sm:ml-3">{response.phone}</span>}
+                          </CardDescription>
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(response.completed_at).toLocaleDateString('ru-RU')}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs sm:text-sm text-muted-foreground">
+                        {new Date(response.completed_at).toLocaleDateString('ru-RU')}
+                      </span>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="ghost">
+                            <Icon name="Trash2" size={16} />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Удалить ответ?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Удалить ответ пользователя {response.name}? Это действие нельзя отменить.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Отмена</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteResponse(response.id)} className="bg-red-600 hover:bg-red-700">
+                              Удалить
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent className="grid md:grid-cols-2 gap-4">
+                <CardContent className="grid sm:grid-cols-2 gap-3 sm:gap-4 p-4 sm:p-6">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Возраст</p>
-                    <p>{response.ageRange}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Тип фигуры</p>
-                    <p>{response.bodyType}</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">Возраст</p>
+                    <p className="text-sm sm:text-base">{response.ageRange}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Бюджет</p>
-                    <p>{response.budgetRange}</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">Тип фигуры</p>
+                    <p className="text-sm sm:text-base">{response.bodyType}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Стиль</p>
-                    <p>{response.stylePreferences}</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">Бюджет</p>
+                    <p className="text-sm sm:text-base">{response.budgetRange}</p>
                   </div>
-                  <div className="md:col-span-2">
-                    <p className="text-sm font-medium text-gray-500">Цветовые предпочтения</p>
-                    <p>{response.colorPreferences}</p>
+                  <div>
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">Стиль</p>
+                    <p className="text-sm sm:text-base">{response.stylePreferences}</p>
                   </div>
-                  <div className="md:col-span-2">
-                    <p className="text-sm font-medium text-gray-500">Цели по гардеробу</p>
-                    <p>{response.wardrobeGoals}</p>
+                  <div className="sm:col-span-2">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">Цветовые предпочтения</p>
+                    <p className="text-sm sm:text-base">{response.colorPreferences}</p>
                   </div>
-                  <div className="md:col-span-2">
-                    <p className="text-sm font-medium text-gray-500">Образ жизни</p>
-                    <p>{response.lifestyle}</p>
+                  <div className="sm:col-span-2">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">Цели по гардеробу</p>
+                    <p className="text-sm sm:text-base">{response.wardrobeGoals}</p>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">Образ жизни</p>
+                    <p className="text-sm sm:text-base">{response.lifestyle}</p>
                   </div>
                 </CardContent>
               </Card>

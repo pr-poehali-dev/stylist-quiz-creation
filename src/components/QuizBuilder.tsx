@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface Question {
   id: string;
@@ -87,6 +88,9 @@ export const QuizBuilder = () => {
   const deleteQuiz = (quizId: string) => {
     const updatedQuizzes = quizzes.filter(q => q.id !== quizId);
     saveQuizzes(updatedQuizzes);
+    if (currentQuiz?.id === quizId) {
+      setCurrentQuiz(null);
+    }
     toast({
       title: 'Удалено',
       description: 'Тест удалён'
@@ -399,11 +403,29 @@ export const QuizBuilder = () => {
                   <div className="flex gap-2">
                     <Button size="sm" onClick={() => setCurrentQuiz(quiz)}>
                       <Icon name="Pencil" size={16} className="mr-2" />
-                      Редактировать
+                      <span className="hidden sm:inline">Редактировать</span>
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => deleteQuiz(quiz.id)}>
-                      <Icon name="Trash2" size={16} />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="outline">
+                          <Icon name="Trash2" size={16} />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Удалить тест?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Удалить тест "{quiz.name}"? Это действие нельзя отменить.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Отмена</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deleteQuiz(quiz.id)} className="bg-red-600 hover:bg-red-700">
+                            Удалить
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               </CardHeader>
