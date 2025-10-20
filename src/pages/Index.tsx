@@ -538,23 +538,54 @@ const AdminPanel = ({ onBack }: { onBack: () => void }) => {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="grid sm:grid-cols-2 gap-3 sm:gap-4 p-4 sm:p-6">
-                  {Object.entries(response).map(([key, value]) => {
-                    if (key === 'id' || key === 'completed_at' || key === 'name' || key === 'email' || key === 'phone') return null;
+                <CardContent className="space-y-4 p-4 sm:p-6">
+                  {(() => {
+                    const activeTemplate = JSON.parse(localStorage.getItem('quizTemplates') || '[]')[0];
+                    if (!activeTemplate) {
+                      return Object.entries(response).map(([key, value]) => {
+                        if (key === 'id' || key === 'completed_at' || key === 'name' || key === 'email' || key === 'phone') return null;
+                        
+                        const displayValue = Array.isArray(value) 
+                          ? value.join(', ') 
+                          : value;
+                        
+                        return (
+                          <div key={key} className="border-b pb-3 last:border-0">
+                            <p className="text-xs sm:text-sm font-medium text-gray-500 mb-1 capitalize">
+                              {key.replace(/([A-Z])/g, ' $1').trim()}
+                            </p>
+                            <p className="text-sm sm:text-base">{displayValue}</p>
+                          </div>
+                        );
+                      });
+                    }
                     
-                    const displayValue = Array.isArray(value) 
-                      ? value.join(', ') 
-                      : value;
-                    
-                    return (
-                      <div key={key} className={typeof value === 'string' && value.length > 50 ? "sm:col-span-2" : ""}>
-                        <p className="text-xs sm:text-sm font-medium text-gray-500 capitalize">
-                          {key.replace(/([A-Z])/g, ' $1').trim()}
-                        </p>
-                        <p className="text-sm sm:text-base">{displayValue}</p>
-                      </div>
-                    );
-                  })}
+                    return activeTemplate.questions.map((question: any) => {
+                      let value = null;
+                      let displayValue = '';
+                      
+                      if (question.field && response[question.field] !== undefined) {
+                        value = response[question.field];
+                        displayValue = Array.isArray(value) ? value.join(', ') : value;
+                      } else if (question.fields) {
+                        const fieldValues = question.fields.map((f: any) => 
+                          response[f.name] ? `${f.label}: ${response[f.name]}` : null
+                        ).filter(Boolean);
+                        displayValue = fieldValues.join(', ');
+                      }
+                      
+                      if (!displayValue) return null;
+                      
+                      return (
+                        <div key={question.id} className="border-b pb-3 last:border-0">
+                          <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                            {question.title}
+                          </p>
+                          <p className="text-sm sm:text-base text-gray-600">{displayValue}</p>
+                        </div>
+                      );
+                    });
+                  })()}
                 </CardContent>
               </Card>
             ))
