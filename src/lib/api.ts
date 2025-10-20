@@ -1,5 +1,7 @@
 import { API_CONFIG } from '@/config/api';
 
+const USE_API = false; // Включить когда backend будет развернут
+
 const getApiUrl = (path: string) => {
   if (API_CONFIG.quiz.startsWith('http')) {
     return `${API_CONFIG.quiz}${path}`;
@@ -9,6 +11,11 @@ const getApiUrl = (path: string) => {
 
 export const quizApi = {
   async getTemplate() {
+    if (!USE_API) {
+      const stored = localStorage.getItem('publicQuizTemplate');
+      return stored ? JSON.parse(stored) : null;
+    }
+    
     try {
       const response = await fetch(getApiUrl('/template'), {
         method: 'GET',
@@ -25,14 +32,27 @@ export const quizApi = {
         throw new Error('Failed to fetch template');
       }
       
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.warn('Backend not available, using localStorage');
+        const stored = localStorage.getItem('publicQuizTemplate');
+        return stored ? JSON.parse(stored) : null;
+      }
+      
       return await response.json();
     } catch (error) {
       console.error('Error fetching template:', error);
-      return null;
+      const stored = localStorage.getItem('publicQuizTemplate');
+      return stored ? JSON.parse(stored) : null;
     }
   },
 
   async saveTemplate(template: any) {
+    if (!USE_API) {
+      localStorage.setItem('publicQuizTemplate', JSON.stringify(template));
+      return template;
+    }
+    
     try {
       const response = await fetch(getApiUrl('/template'), {
         method: 'POST',
@@ -48,12 +68,18 @@ export const quizApi = {
       
       return await response.json();
     } catch (error) {
-      console.error('Error saving template:', error);
-      throw error;
+      console.error('Error saving template, using localStorage:', error);
+      localStorage.setItem('publicQuizTemplate', JSON.stringify(template));
+      return template;
     }
   },
 
   async updateTemplate(template: any) {
+    if (!USE_API) {
+      localStorage.setItem('publicQuizTemplate', JSON.stringify(template));
+      return template;
+    }
+    
     try {
       const response = await fetch(getApiUrl('/template'), {
         method: 'PUT',
@@ -69,12 +95,21 @@ export const quizApi = {
       
       return await response.json();
     } catch (error) {
-      console.error('Error updating template:', error);
-      throw error;
+      console.error('Error updating template, using localStorage:', error);
+      localStorage.setItem('publicQuizTemplate', JSON.stringify(template));
+      return template;
     }
   },
 
   async submitResponse(data: any) {
+    if (!USE_API) {
+      const responses = JSON.parse(localStorage.getItem('quizResponses') || '[]');
+      const newResponse = { ...data, id: Date.now(), completed_at: new Date().toISOString() };
+      responses.push(newResponse);
+      localStorage.setItem('quizResponses', JSON.stringify(responses));
+      return { success: true };
+    }
+    
     try {
       const response = await fetch(getApiUrl('/response'), {
         method: 'POST',
@@ -90,12 +125,20 @@ export const quizApi = {
       
       return await response.json();
     } catch (error) {
-      console.error('Error submitting response:', error);
-      throw error;
+      console.error('Error submitting response, using localStorage:', error);
+      const responses = JSON.parse(localStorage.getItem('quizResponses') || '[]');
+      const newResponse = { ...data, id: Date.now(), completed_at: new Date().toISOString() };
+      responses.push(newResponse);
+      localStorage.setItem('quizResponses', JSON.stringify(responses));
+      return { success: true };
     }
   },
 
   async getResponses() {
+    if (!USE_API) {
+      return JSON.parse(localStorage.getItem('quizResponses') || '[]');
+    }
+    
     try {
       const response = await fetch(getApiUrl('/admin/responses'), {
         method: 'GET',
@@ -110,8 +153,8 @@ export const quizApi = {
       
       return await response.json();
     } catch (error) {
-      console.error('Error fetching responses:', error);
-      throw error;
+      console.error('Error fetching responses, using localStorage:', error);
+      return JSON.parse(localStorage.getItem('quizResponses') || '[]');
     }
   },
 };
