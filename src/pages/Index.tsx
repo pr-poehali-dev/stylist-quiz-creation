@@ -39,6 +39,8 @@ const Index = () => {
   }, [showAdmin]);
 
   useEffect(() => {
+    if (showAdmin) return;
+    
     const templates = JSON.parse(localStorage.getItem('quizTemplates') || '[]');
     const savedStep = localStorage.getItem('quizStep');
     const savedData = localStorage.getItem('quizData');
@@ -73,7 +75,7 @@ const Index = () => {
     } else {
       setActiveQuiz(null);
     }
-  }, []);
+  }, [showAdmin]);
 
   const questions = activeQuiz?.questions || [];
   const currentQuestion = questions[step];
@@ -152,7 +154,10 @@ const Index = () => {
   };
 
   if (showAdmin) {
-    return <AdminPanel onBack={() => setShowAdmin(false)} />;
+    return <AdminPanel onBack={() => {
+      setShowAdmin(false);
+      localStorage.removeItem('showAdmin');
+    }} />;
   }
 
   if (!activeQuiz) {
