@@ -418,6 +418,8 @@ const AdminPanel = ({ onBack }: { onBack: () => void }) => {
           <Button onClick={() => {
             localStorage.removeItem('adminAuth');
             localStorage.removeItem('showAdmin');
+            localStorage.removeItem('adminTab');
+            localStorage.removeItem('currentQuizDraft');
             onBack();
           }} variant="outline" size="sm">
             <Icon name="LogOut" size={18} className="mr-2" />
@@ -425,7 +427,7 @@ const AdminPanel = ({ onBack }: { onBack: () => void }) => {
           </Button>
         </div>
 
-        <Tabs defaultValue="responses" className="space-y-4 sm:space-y-6">
+        <Tabs defaultValue={localStorage.getItem('adminTab') || 'responses'} onValueChange={(value) => localStorage.setItem('adminTab', value)} className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="responses" className="text-sm sm:text-base">Результаты</TabsTrigger>
             <TabsTrigger value="builder" className="text-sm sm:text-base">Конструктор</TabsTrigger>

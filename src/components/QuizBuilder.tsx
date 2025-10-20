@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -35,7 +35,10 @@ export const QuizBuilder = () => {
     const saved = localStorage.getItem('quizTemplates');
     return saved ? JSON.parse(saved) : [];
   });
-  const [currentQuiz, setCurrentQuiz] = useState<Quiz | null>(null);
+  const [currentQuiz, setCurrentQuiz] = useState<Quiz | null>(() => {
+    const saved = localStorage.getItem('currentQuizDraft');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [showQuestionDialog, setShowQuestionDialog] = useState(false);
 
@@ -49,6 +52,12 @@ export const QuizBuilder = () => {
   });
   
   const [customFields, setCustomFields] = useState<Array<{ name: string; label: string; type: string; required: boolean }>>([]);
+  
+  useEffect(() => {
+    if (currentQuiz) {
+      localStorage.setItem('currentQuizDraft', JSON.stringify(currentQuiz));
+    }
+  }, [currentQuiz]);
 
   const saveQuizzes = (updatedQuizzes: Quiz[]) => {
     localStorage.setItem('quizTemplates', JSON.stringify(updatedQuizzes));
@@ -64,6 +73,7 @@ export const QuizBuilder = () => {
       createdAt: new Date().toISOString()
     };
     setCurrentQuiz(newQuiz);
+    localStorage.setItem('currentQuizDraft', JSON.stringify(newQuiz));
   };
 
   const saveCurrentQuiz = () => {
@@ -80,6 +90,7 @@ export const QuizBuilder = () => {
     }
 
     saveQuizzes(updatedQuizzes);
+    localStorage.removeItem('currentQuizDraft');
     toast({
       title: 'Сохранено',
       description: 'Тест успешно сохранён'
@@ -91,6 +102,7 @@ export const QuizBuilder = () => {
     const updatedQuizzes = quizzes.filter(q => q.id !== quizId);
     saveQuizzes(updatedQuizzes);
     if (currentQuiz?.id === quizId) {
+      localStorage.removeItem('currentQuizDraft');
       setCurrentQuiz(null);
     }
     toast({
@@ -186,7 +198,10 @@ export const QuizBuilder = () => {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <Button onClick={() => setCurrentQuiz(null)} variant="outline">
+          <Button onClick={() => {
+            localStorage.removeItem('currentQuizDraft');
+            setCurrentQuiz(null);
+          }} variant="outline">
             <Icon name="ArrowLeft" size={20} className="mr-2" />
             К списку тестов
           </Button>
