@@ -583,8 +583,14 @@ const AdminPanel = ({ onBack }: { onBack: () => void }) => {
   useEffect(() => {
     if (isAuthenticated) {
       loadResponses();
+      
+      const interval = setInterval(() => {
+        loadResponses();
+      }, 5000);
+      
+      return () => clearInterval(interval);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const handleLogin = async () => {
     if (email === 'pells1ze@gmail.com' && password === '123789456h') {
@@ -706,7 +712,13 @@ const AdminPanel = ({ onBack }: { onBack: () => void }) => {
 
           <TabsContent value="responses" className="space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <p className="text-sm text-gray-600">Всего ответов: {responses.length}</p>
+              <div className="flex items-center gap-3">
+                <p className="text-sm text-gray-600">Всего ответов: {responses.length}</p>
+                <Button onClick={loadResponses} variant="ghost" size="sm">
+                  <Icon name="RefreshCw" size={16} className="mr-2" />
+                  Обновить
+                </Button>
+              </div>
               {responses.length > 0 && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
