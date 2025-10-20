@@ -200,10 +200,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         elif method == 'GET' and '/admin/responses' in path:
             cur.execute('''
                 SELECT r.id, r.template_id, r.contact_name as name, r.contact_phone as phone, 
-                       r.contact_email as email, r.answers, r.completed_at,
-                       t.questions
+                       r.contact_email as email, r.answers, r.completed_at
                 FROM t_p90617481_stylist_quiz_creatio.quiz_responses r
-                LEFT JOIN t_p90617481_stylist_quiz_creatio.quiz_templates t ON r.template_id = t.id
                 ORDER BY r.completed_at DESC
             ''')
             results = cur.fetchall()
@@ -219,8 +217,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }
                 
                 if row['answers']:
-                    answers = row['answers'] if isinstance(row['answers'], dict) else json.loads(row['answers'])
-                    resp_data.update(answers)
+                    try:
+                        answers = row['answers']
+                        if isinstance(answers, str):
+                            answers = json.loads(answers)
+                        if isinstance(answers, dict):
+                            resp_data.update(answers)
+                    except Exception as e:
+                        print(f"Error parsing answers: {e}")
                 
                 responses.append(resp_data)
             
