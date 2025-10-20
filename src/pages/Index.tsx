@@ -44,46 +44,51 @@ const Index = () => {
   useEffect(() => {
     if (showAdmin) return;
     
-    const publicQuiz = localStorage.getItem('publicQuizTemplate');
-    const savedStep = localStorage.getItem('quizStep');
-    const savedData = localStorage.getItem('quizData');
-    
-    if (publicQuiz) {
+    const loadQuiz = async () => {
       try {
-        const quiz = JSON.parse(publicQuiz);
-        setActiveQuiz(quiz);
+        const { quizApi } = await import('@/lib/api');
+        const quiz = await quizApi.getTemplate();
         
-        if (savedStep) {
-          setStep(parseInt(savedStep));
-        }
-        
-        if (savedData) {
-          try {
-            setQuizData(JSON.parse(savedData));
-          } catch (e) {
-            console.error('Error parsing saved quiz data:', e);
+        if (quiz) {
+          setActiveQuiz(quiz);
+          
+          const savedStep = localStorage.getItem('quizStep');
+          const savedData = localStorage.getItem('quizData');
+          
+          if (savedStep) {
+            setStep(parseInt(savedStep));
+          }
+          
+          if (savedData) {
+            try {
+              setQuizData(JSON.parse(savedData));
+            } catch (e) {
+              console.error('Error parsing saved quiz data:', e);
+            }
+          } else {
+            const initialData: any = {};
+            quiz.questions.forEach((q: any) => {
+              if (q.field) {
+                initialData[q.field] = q.type === 'checkbox' ? [] : '';
+              }
+              if (q.fields) {
+                q.fields.forEach((f: any) => {
+                  initialData[f.name] = '';
+                });
+              }
+            });
+            setQuizData(initialData);
           }
         } else {
-          const initialData: any = {};
-          quiz.questions.forEach((q: any) => {
-            if (q.field) {
-              initialData[q.field] = q.type === 'checkbox' ? [] : '';
-            }
-            if (q.fields) {
-              q.fields.forEach((f: any) => {
-                initialData[f.name] = '';
-              });
-            }
-          });
-          setQuizData(initialData);
+          setActiveQuiz(null);
         }
-      } catch (e) {
-        console.error('Error loading public quiz:', e);
+      } catch (error) {
+        console.error('Error loading quiz:', error);
         setActiveQuiz(null);
       }
-    } else {
-      setActiveQuiz(null);
-    }
+    };
+    
+    loadQuiz();
   }, [showAdmin]);
 
   const questions = activeQuiz?.questions || [];
@@ -112,38 +117,42 @@ const Index = () => {
     }
   };
 
-  const handleSubmit = () => {
-    toast({
-      title: 'Спасибо!',
-      description: 'Ваши ответы сохранены. Скоро с вами свяжется стилист.'
-    });
-    
-    const savedResponses = JSON.parse(localStorage.getItem('quizResponses') || '[]');
-    savedResponses.push({
-      ...quizData,
-      completed_at: new Date().toISOString(),
-      id: Date.now()
-    });
-    localStorage.setItem('quizResponses', JSON.stringify(savedResponses));
-    
-    const emptyData: any = {};
-    if (activeQuiz?.questions) {
-      activeQuiz.questions.forEach((q: any) => {
-        if (q.field) {
-          emptyData[q.field] = q.type === 'checkbox' ? [] : '';
-        }
-        if (q.fields) {
-          q.fields.forEach((f: any) => {
-            emptyData[f.name] = '';
-          });
-        }
+  const handleSubmit = async () => {
+    try {
+      const { quizApi } = await import('@/lib/api');
+      await quizApi.submitResponse(quizData);
+      
+      toast({
+        title: 'Спасибо!',
+        description: 'Ваши ответы сохранены. Скоро с вами свяжется стилист.'
+      });
+      
+      const emptyData: any = {};
+      if (activeQuiz?.questions) {
+        activeQuiz.questions.forEach((q: any) => {
+          if (q.field) {
+            emptyData[q.field] = q.type === 'checkbox' ? [] : '';
+          }
+          if (q.fields) {
+            q.fields.forEach((f: any) => {
+              emptyData[f.name] = '';
+            });
+          }
+        });
+      }
+      
+      setQuizData(emptyData);
+      setStep(0);
+      localStorage.removeItem('quizData');
+      localStorage.removeItem('quizStep');
+    } catch (error) {
+      console.error('Error submitting quiz:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось отправить ответы. Попробуйте позже.',
+        variant: 'destructive'
       });
     }
-    
-    setQuizData(emptyData);
-    setStep(0);
-    localStorage.removeItem('quizData');
-    localStorage.removeItem('quizStep');
   };
 
   const canProceed = () => {
@@ -559,9 +568,19 @@ const AdminPanel = ({ onBack }: { onBack: () => void }) => {
     }
   };
 
-  const loadResponses = () => {
-    const savedResponses = JSON.parse(localStorage.getItem('quizResponses') || '[]');
-    setResponses(savedResponses);
+  const loadResponses = async () => {
+    try {
+      const { quizApi } = await import('@/lib/api');
+      const data = await quizApi.getResponses();
+      setResponses(data || []);
+    } catch (error) {
+      console.error('Error loading responses:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось загрузить ответы',
+        variant: 'destructive'
+      });
+    }
   };
 
   const deleteResponse = (responseId: number) => {

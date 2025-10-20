@@ -76,27 +76,43 @@ export const QuizBuilder = () => {
     localStorage.setItem('currentQuizDraft', JSON.stringify(newQuiz));
   };
 
-  const saveCurrentQuiz = () => {
+  const saveCurrentQuiz = async () => {
     if (!currentQuiz) return;
 
-    const existingIndex = quizzes.findIndex(q => q.id === currentQuiz.id);
-    let updatedQuizzes;
+    try {
+      const { quizApi } = await import('@/lib/api');
+      
+      if (currentQuiz.id && quizzes.find(q => q.id === currentQuiz.id)) {
+        await quizApi.updateTemplate(currentQuiz);
+      } else {
+        await quizApi.saveTemplate(currentQuiz);
+      }
 
-    if (existingIndex >= 0) {
-      updatedQuizzes = [...quizzes];
-      updatedQuizzes[existingIndex] = currentQuiz;
-    } else {
-      updatedQuizzes = [...quizzes, currentQuiz];
+      const existingIndex = quizzes.findIndex(q => q.id === currentQuiz.id);
+      let updatedQuizzes;
+
+      if (existingIndex >= 0) {
+        updatedQuizzes = [...quizzes];
+        updatedQuizzes[existingIndex] = currentQuiz;
+      } else {
+        updatedQuizzes = [...quizzes, currentQuiz];
+      }
+
+      saveQuizzes(updatedQuizzes);
+      localStorage.removeItem('currentQuizDraft');
+      toast({
+        title: 'Сохранено',
+        description: 'Тест успешно сохранён и опубликован для всех пользователей'
+      });
+      setCurrentQuiz(null);
+    } catch (error) {
+      console.error('Error saving quiz:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось сохранить тест. Попробуйте позже.',
+        variant: 'destructive'
+      });
     }
-
-    saveQuizzes(updatedQuizzes);
-    localStorage.setItem('publicQuizTemplate', JSON.stringify(currentQuiz));
-    localStorage.removeItem('currentQuizDraft');
-    toast({
-      title: 'Сохранено',
-      description: 'Тест успешно сохранён и опубликован для всех пользователей'
-    });
-    setCurrentQuiz(null);
   };
 
   const deleteQuiz = (quizId: string) => {
@@ -121,12 +137,22 @@ export const QuizBuilder = () => {
     });
   };
 
-  const publishQuiz = (quiz: Quiz) => {
-    localStorage.setItem('publicQuizTemplate', JSON.stringify(quiz));
-    toast({
-      title: 'Опубликовано',
-      description: 'Тест теперь виден всем пользователям'
-    });
+  const publishQuiz = async (quiz: Quiz) => {
+    try {
+      const { quizApi } = await import('@/lib/api');
+      await quizApi.updateTemplate(quiz);
+      toast({
+        title: 'Опубликовано',
+        description: 'Тест теперь виден всем пользователям'
+      });
+    } catch (error) {
+      console.error('Error publishing quiz:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось опубликовать тест',
+        variant: 'destructive'
+      });
+    }
   };
 
   const openQuestionDialog = (question?: Question) => {
