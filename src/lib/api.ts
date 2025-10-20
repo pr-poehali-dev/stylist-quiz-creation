@@ -45,9 +45,17 @@ export const quizApi = {
   },
 
   async saveTemplate(template: any) {
+    const mapped = {
+      title: template.name || template.title || 'Новый тест',
+      description: template.description || '',
+      welcomeTitle: template.welcomeTitle || 'Добро пожаловать',
+      welcomeSubtitle: template.welcomeSubtitle || 'Пройдите короткий тест',
+      questions: template.questions || []
+    };
+
     if (!USE_API) {
-      localStorage.setItem("publicQuizTemplate", JSON.stringify(template));
-      return template;
+      localStorage.setItem("publicQuizTemplate", JSON.stringify(mapped));
+      return mapped;
     }
 
     try {
@@ -56,7 +64,7 @@ export const quizApi = {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(template),
+        body: JSON.stringify(mapped),
       });
 
       if (!response.ok) {
@@ -66,15 +74,24 @@ export const quizApi = {
       return await response.json();
     } catch (error) {
       console.error("Error saving template, using localStorage:", error);
-      localStorage.setItem("publicQuizTemplate", JSON.stringify(template));
-      return template;
+      localStorage.setItem("publicQuizTemplate", JSON.stringify(mapped));
+      return mapped;
     }
   },
 
   async updateTemplate(template: any) {
+    const mapped = {
+      id: template.id,
+      title: template.name || template.title || 'Новый тест',
+      description: template.description || '',
+      welcomeTitle: template.welcomeTitle || 'Добро пожаловать',
+      welcomeSubtitle: template.welcomeSubtitle || 'Пройдите короткий тест',
+      questions: template.questions || []
+    };
+
     if (!USE_API) {
-      localStorage.setItem("publicQuizTemplate", JSON.stringify(template));
-      return template;
+      localStorage.setItem("publicQuizTemplate", JSON.stringify(mapped));
+      return mapped;
     }
 
     try {
@@ -83,7 +100,7 @@ export const quizApi = {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(template),
+        body: JSON.stringify(mapped),
       });
 
       if (!response.ok) {
@@ -93,8 +110,8 @@ export const quizApi = {
       return await response.json();
     } catch (error) {
       console.error("Error updating template, using localStorage:", error);
-      localStorage.setItem("publicQuizTemplate", JSON.stringify(template));
-      return template;
+      localStorage.setItem("publicQuizTemplate", JSON.stringify(mapped));
+      return mapped;
     }
   },
 
