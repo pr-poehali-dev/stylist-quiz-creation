@@ -44,36 +44,42 @@ const Index = () => {
   useEffect(() => {
     if (showAdmin) return;
     
-    const templates = JSON.parse(localStorage.getItem('quizTemplates') || '[]');
+    const publicQuiz = localStorage.getItem('publicQuizTemplate');
     const savedStep = localStorage.getItem('quizStep');
     const savedData = localStorage.getItem('quizData');
     
-    if (templates.length > 0) {
-      setActiveQuiz(templates[0]);
-      
-      if (savedStep) {
-        setStep(parseInt(savedStep));
-      }
-      
-      if (savedData) {
-        try {
-          setQuizData(JSON.parse(savedData));
-        } catch (e) {
-          console.error('Error parsing saved quiz data:', e);
+    if (publicQuiz) {
+      try {
+        const quiz = JSON.parse(publicQuiz);
+        setActiveQuiz(quiz);
+        
+        if (savedStep) {
+          setStep(parseInt(savedStep));
         }
-      } else {
-        const initialData: any = {};
-        templates[0].questions.forEach((q: any) => {
-          if (q.field) {
-            initialData[q.field] = q.type === 'checkbox' ? [] : '';
+        
+        if (savedData) {
+          try {
+            setQuizData(JSON.parse(savedData));
+          } catch (e) {
+            console.error('Error parsing saved quiz data:', e);
           }
-          if (q.fields) {
-            q.fields.forEach((f: any) => {
-              initialData[f.name] = '';
-            });
-          }
-        });
-        setQuizData(initialData);
+        } else {
+          const initialData: any = {};
+          quiz.questions.forEach((q: any) => {
+            if (q.field) {
+              initialData[q.field] = q.type === 'checkbox' ? [] : '';
+            }
+            if (q.fields) {
+              q.fields.forEach((f: any) => {
+                initialData[f.name] = '';
+              });
+            }
+          });
+          setQuizData(initialData);
+        }
+      } catch (e) {
+        console.error('Error loading public quiz:', e);
+        setActiveQuiz(null);
       }
     } else {
       setActiveQuiz(null);

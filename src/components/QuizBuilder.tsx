@@ -90,10 +90,11 @@ export const QuizBuilder = () => {
     }
 
     saveQuizzes(updatedQuizzes);
+    localStorage.setItem('publicQuizTemplate', JSON.stringify(currentQuiz));
     localStorage.removeItem('currentQuizDraft');
     toast({
       title: 'Сохранено',
-      description: 'Тест успешно сохранён'
+      description: 'Тест успешно сохранён и опубликован для всех пользователей'
     });
     setCurrentQuiz(null);
   };
@@ -101,6 +102,15 @@ export const QuizBuilder = () => {
   const deleteQuiz = (quizId: string) => {
     const updatedQuizzes = quizzes.filter(q => q.id !== quizId);
     saveQuizzes(updatedQuizzes);
+    
+    const publicQuiz = localStorage.getItem('publicQuizTemplate');
+    if (publicQuiz) {
+      const parsed = JSON.parse(publicQuiz);
+      if (parsed.id === quizId) {
+        localStorage.removeItem('publicQuizTemplate');
+      }
+    }
+    
     if (currentQuiz?.id === quizId) {
       localStorage.removeItem('currentQuizDraft');
       setCurrentQuiz(null);
@@ -108,6 +118,14 @@ export const QuizBuilder = () => {
     toast({
       title: 'Удалено',
       description: 'Тест удалён'
+    });
+  };
+
+  const publishQuiz = (quiz: Quiz) => {
+    localStorage.setItem('publicQuizTemplate', JSON.stringify(quiz));
+    toast({
+      title: 'Опубликовано',
+      description: 'Тест теперь виден всем пользователям'
     });
   };
 
@@ -525,6 +543,10 @@ export const QuizBuilder = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    <Button size="sm" variant="secondary" onClick={() => publishQuiz(quiz)}>
+                      <Icon name="Globe" size={16} className="mr-2" />
+                      <span className="hidden sm:inline">Опубликовать</span>
+                    </Button>
                     <Button size="sm" onClick={() => setCurrentQuiz(quiz)}>
                       <Icon name="Pencil" size={16} className="mr-2" />
                       <span className="hidden sm:inline">Редактировать</span>

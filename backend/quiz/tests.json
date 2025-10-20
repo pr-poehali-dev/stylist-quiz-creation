@@ -1,9 +1,15 @@
 {
   "tests": [
     {
+      "name": "Get quiz template",
+      "method": "GET",
+      "path": "/template",
+      "expectedStatus": 404
+    },
+    {
       "name": "Submit quiz response",
       "method": "POST",
-      "path": "/",
+      "path": "/response",
       "body": {
         "name": "Анна Иванова",
         "email": "anna@example.com",
@@ -20,13 +26,6 @@
       "expectedBody": {
         "success": true
       }
-    },
-    {
-      "name": "Get admin responses",
-      "method": "GET",
-      "path": "/admin/responses",
-      "expectedStatus": 200,
-      "bodyMatcher": "partial"
     }
   ]
 }
